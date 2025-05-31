@@ -26,7 +26,7 @@ export const AccountLimitsEditor = ({ accountLimits, onLimitUpdate }: AccountLim
     if (value === '') {
       setPendingLimits({
         ...pendingLimits,
-        [type]: ''
+        [type]: null
       });
     } else {
       // Only parse if there's a value
@@ -41,24 +41,20 @@ export const AccountLimitsEditor = ({ accountLimits, onLimitUpdate }: AccountLim
     setHasChanges(true);
   };
   
-  // Handle save button click - modified to ensure valid numbers
+  // Handle save button click - fixed type comparison
   const handleSave = () => {
     // Update each changed limit
     Object.keys(pendingLimits).forEach((key) => {
       const limitKey = key as keyof AccountLimits;
       const pendingValue = pendingLimits[limitKey];
-      
-      // Convert empty strings to default values
-      const valueToSave = pendingValue === '' ? 0 : pendingValue;
-      
-      // Fixed type comparison: convert both values to strings for safe comparison
       const currentValue = accountLimits[limitKey];
       
-      // Explicit type checking and conversion to ensure safe comparison
-      const hasChanged = String(valueToSave) !== String(currentValue);
-        
-      if (hasChanged) {
-        onLimitUpdate(limitKey, valueToSave as number);
+      // Convert both to numbers for proper comparison, treating null as 0
+      const pendingNum = pendingValue === null ? 0 : Number(pendingValue);
+      const currentNum = currentValue === null ? 0 : Number(currentValue);
+      
+      if (pendingNum !== currentNum) {
+        onLimitUpdate(limitKey, pendingValue === null ? 0 : pendingNum);
       }
     });
     setHasChanges(false);
@@ -74,7 +70,7 @@ export const AccountLimitsEditor = ({ accountLimits, onLimitUpdate }: AccountLim
           <Input
             type="text"
             inputMode="numeric"
-            value={pendingLimits.basic === null ? '' : pendingLimits.basic}
+            value={pendingLimits.basic === null ? '' : pendingLimits.basic.toString()}
             onChange={(e) => handleInputChange('basic', e.target.value)}
             className="w-full m-1 p-1"
           />
@@ -85,7 +81,7 @@ export const AccountLimitsEditor = ({ accountLimits, onLimitUpdate }: AccountLim
           <Input
             type="text"
             inputMode="numeric"
-            value={pendingLimits.starter === null ? '' : pendingLimits.starter}
+            value={pendingLimits.starter === null ? '' : pendingLimits.starter.toString()}
             onChange={(e) => handleInputChange('starter', e.target.value)}
             className="w-full m-1 p-1"
           />
@@ -96,7 +92,7 @@ export const AccountLimitsEditor = ({ accountLimits, onLimitUpdate }: AccountLim
           <Input
             type="text"
             inputMode="numeric"
-            value={pendingLimits.premium === null ? '' : pendingLimits.premium}
+            value={pendingLimits.premium === null ? '' : pendingLimits.premium.toString()}
             onChange={(e) => handleInputChange('premium', e.target.value)}
             className="w-full m-1 p-1"
           />
