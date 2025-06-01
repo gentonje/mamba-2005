@@ -1,24 +1,20 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   FlatList,
   RefreshControl,
-  TextInput,
-  TouchableOpacity,
-  Image,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../integrations/supabase/client';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
-import { getStorageUrl } from '../../utils/storage';
-import { convertCurrency } from '../../utils/currencyConverter';
+import { ProductCard } from '../../components/ProductCard';
+import { ProductSearchHeader } from '../../components/ProductSearchHeader';
+import { Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 interface Product {
   id: string;
@@ -30,20 +26,36 @@ interface Product {
   category: string;
   available_quantity: number;
   user_id: string;
+  in_stock: boolean;
+  average_rating?: number;
+  review_count?: number;
   product_images?: Array<{
     storage_path: string;
     is_main: boolean;
   }>;
 }
 
+interface FilterOptions {
+  category: string;
+  priceRange: { min: number; max: number };
+  sortBy: string;
+  inStockOnly: boolean;
+}
+
 export default function ProductsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCurrency, setSelectedCurrency] = useState('SSP');
+  const [filters, setFilters] = useState<FilterOptions>({
+    category: 'all',
+    priceRange: { min: 0, max: 10000 },
+    sortBy: 'newest',
+    inStockOnly: false,
+  });
+  
   const { session } = useAuth();
   const navigation = useNavigation();
 
   const { data: products = [], isLoading, refetch } = useQuery({
-    queryKey: ['products', searchQuery],
+    queryKey: ['products', searchQuery, filters],
     queryFn: async () => {
       let query = supabase
         .from('products')
@@ -51,11 +63,38 @@ export default function ProductsScreen() {
           *,
           product_images(*)
         `)
-        .eq('product_status', 'published')
-        .order('created_at', { ascending: false });
+        .eq('product_status', 'published');
 
+      // Apply filters
       if (searchQuery) {
         query = query.ilike('title', `%${searchQuery}%`);
+      }
+
+      if (filters.category !== 'all') {
+        query = query.eq('category', filters.category);
+      }
+
+      if (filters.inStockOnly) {
+        query = query.eq('in_stock', true);
+      }
+
+      query = query
+        .gte('price', filters.priceRange.min)
+        .lte('price', filters.priceRange.max);
+
+      // Apply sorting
+      switch (filters.sortBy) {
+        case 'price_asc':
+          query = query.order('price', { ascending: true });
+          break;
+        case 'price_desc':
+          query = query.order('price', { ascending: false });
+          break;
+        case 'popular':
+          query = query.order('views', { ascending: false });
+          break;
+        default:
+          query = query.order('created_at', { ascending: false });
       }
 
       const { data, error } = await query;
@@ -68,43 +107,12 @@ export default function ProductsScreen() {
     navigation.navigate('ProductDetail' as never, { productId: product.id } as never);
   };
 
-  const getProductImageUrl = (product: Product) => {
-    const mainImage = product.product_images?.find(img => img.is_main);
-    return getStorageUrl(mainImage?.storage_path || product.storage_path);
-  };
-
-  const renderProduct = ({ item }: { item: Product }) => {
-    const imageUrl = getProductImageUrl(item);
-    
-    return (
-      <TouchableOpacity 
-        style={styles.productCard}
-        onPress={() => handleProductPress(item)}
-      >
-        <Image 
-          source={{ uri: imageUrl }}
-          style={styles.productImage}
-          defaultSource={require('../../assets/placeholder.png')}
-        />
-        <View style={styles.productInfo}>
-          <Text style={styles.productTitle} numberOfLines={2}>
-            {item.title}
-          </Text>
-          <Text style={styles.productDescription} numberOfLines={2}>
-            {item.description}
-          </Text>
-          <View style={styles.productFooter}>
-            <Text style={styles.productPrice}>
-              {item.currency} {Math.round(item.price).toLocaleString()}
-            </Text>
-            <Text style={styles.productQuantity}>
-              Qty: {item.available_quantity}
-            </Text>
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
-  };
+  const renderProduct = ({ item }: { item: Product }) => (
+    <ProductCard
+      product={item}
+      onPress={() => handleProductPress(item)}
+    />
+  );
 
   if (!session) {
     return (
@@ -119,25 +127,12 @@ export default function ProductsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Products</Text>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => navigation.navigate('AddProduct' as never)}
-        >
-          <Ionicons name="add" size={24} color="white" />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#6B7280" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search products..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-      </View>
+      <ProductSearchHeader
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        filters={filters}
+        onFiltersChange={setFilters}
+      />
 
       {isLoading ? (
         <View style={styles.loading}>
@@ -166,46 +161,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F9FAFB',
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
-  },
-  addButton: {
-    backgroundColor: '#6366F1',
-    borderRadius: 20,
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'white',
-    margin: 16,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    paddingVertical: 12,
-    fontSize: 16,
-  },
   authPrompt: {
     flex: 1,
     justifyContent: 'center',
@@ -226,52 +181,5 @@ const styles = StyleSheet.create({
   },
   row: {
     justifyContent: 'space-between',
-  },
-  productCard: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    marginBottom: 16,
-    flex: 1,
-    marginHorizontal: 4,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  productImage: {
-    width: '100%',
-    height: 120,
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
-    backgroundColor: '#F3F4F6',
-  },
-  productInfo: {
-    padding: 12,
-  },
-  productTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 4,
-  },
-  productDescription: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 8,
-  },
-  productFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  productPrice: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#059669',
-  },
-  productQuantity: {
-    fontSize: 12,
-    color: '#6B7280',
   },
 });

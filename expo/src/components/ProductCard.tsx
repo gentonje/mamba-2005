@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getStorageUrl } from '../utils/storage';
+import { ProductRating } from './ProductRating';
 
 interface ProductCardProps {
   product: {
@@ -21,6 +22,8 @@ interface ProductCardProps {
     category: string;
     available_quantity: number;
     in_stock: boolean;
+    average_rating?: number;
+    review_count?: number;
     product_images?: Array<{
       storage_path: string;
       is_main: boolean;
@@ -82,6 +85,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <Text style={styles.description} numberOfLines={2}>
           {product.description}
         </Text>
+
+        {/* Rating Component */}
+        {product.average_rating && product.average_rating > 0 && (
+          <View style={styles.ratingContainer}>
+            <ProductRating
+              rating={product.average_rating}
+              reviewCount={product.review_count || 0}
+              size="small"
+            />
+          </View>
+        )}
 
         <View style={styles.footer}>
           <View>
@@ -156,6 +170,9 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 14,
     color: '#6B7280',
+    marginBottom: 8,
+  },
+  ratingContainer: {
     marginBottom: 8,
   },
   footer: {
