@@ -1,24 +1,9 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../integrations/supabase/client';
 import { useAuth } from '../contexts/AuthContext';
 import { Alert } from 'react-native';
-
-export interface CartItemType {
-  id: string;
-  product_id: string;
-  quantity: number;
-  user_id: string;
-  created_at: string;
-  product: {
-    id: string;
-    title: string;
-    price: number;
-    currency: string;
-    user_id: string;
-    storage_path: string;
-  };
-}
 
 export const useCart = () => {
   const { user } = useAuth();
@@ -33,33 +18,24 @@ export const useCart = () => {
         .from('cart_items')
         .select(`
           *,
-          product:products(
-            id,
-            title,
-            price,
-            currency,
-            user_id,
-            storage_path
+          products!inner(
+            *,
+            product_images(*)
           )
         `)
         .eq('user_id', user.id);
 
       if (error) throw error;
-      return data as CartItemType[];
+      return data;
     },
     enabled: !!user,
   });
-
-  const totalAmount = cartItems.reduce(
-    (sum, item) => sum + (item.product?.price || 0) * item.quantity,
-    0
-  );
 
   const addToCartMutation = useMutation({
     mutationFn: async ({ productId, quantity = 1 }: { productId: string; quantity?: number }) => {
       if (!user) throw new Error('User not authenticated');
 
-      // Check if item already exists
+      // Check if item already exists in cart
       const { data: existingItem } = await supabase
         .from('cart_items')
         .select('*')
@@ -68,41 +44,95 @@ export const useCart = () => {
         .single();
 
       if (existingItem) {
-        // Update quantity
+        // Update quantity if item exists
         const { error } = await supabase
           .from('cart_items')
           .update({ quantity: existingItem.quantity + quantity })
           .eq('id', existingItem.id);
-
+        
         if (error) throw error;
       } else {
-        // Insert new item
+        // Add new item to cart
         const { error } = await supabase
           .from('cart_items')
-          .insert({
+          .insert([{
             user_id: user.id,
             product_id: productId,
             quantity,
-          });
-
+          }]);
+        
         if (error) throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
-      Alert.alert('Success', 'Item added to cart');
+      Alert.alert('Success', 'Product added to cart!');
     },
     onError: (error) => {
-      Alert.alert('Error', 'Failed to add item to cart');
+      Alert.alert('Error', 'Failed to add product to cart');
       console.error('Add to cart error:', error);
     },
   });
 
+  const removeFromCartMutation = useMutation({
+    mutationFn: async (itemId: string) => {
+      const { error } = await supabase
+        .from('cart_items')
+        .delete()
+        .eq('id', itemId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+    },
+    onError: (error) => {
+      Alert.alert('Error', 'Failed to remove item from cart');
+      console.error('Remove from cart error:', error);
+    },
+  });
+
+  const updateQuantityMutation = useMutation({
+    mutationFn: async ({ itemId, quantity }: { itemId: string; quantity: number }) => {
+      if (quantity <= 0) {
+        const { error } = await supabase
+          .from('cart_items')
+          .delete()
+          .eq('id', itemId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('cart_items')
+          .update({ quantity })
+          .eq('id', itemId);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+    },
+    onError: (error) => {
+      Alert.alert('Error', 'Failed to update cart item');
+      console.error('Update cart error:', error);
+    },
+  });
+
+  const cartItemsCount = cartItems?.length || 0;
+
+  const cartTotal = cartItems?.reduce((total, item) => {
+    return total + (item.products.price * item.quantity);
+  }, 0) || 0;
+
   return {
     cartItems,
     isLoading,
-    totalAmount,
+    cartItemsCount,
+    cartTotal,
     addToCart: addToCartMutation.mutate,
+    removeFromCart: removeFromCartMutation.mutate,
+    updateQuantity: updateQuantityMutation.mutate,
     isAddingToCart: addToCartMutation.isPending,
+    isRemovingFromCart: removeFromCartMutation.isPending,
+    isUpdatingQuantity: updateQuantityMutation.isPending,
   };
 };
