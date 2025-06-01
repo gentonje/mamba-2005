@@ -1,79 +1,41 @@
 
-import { supabase } from '../integrations/supabase/client';
-
-export type SupportedCurrency = string;
-
-interface CurrencyRate {
-  code: string;
-  rate: number;
+interface CurrencyRates {
+  [key: string]: number;
 }
 
-let ratesCache: Record<string, number> | null = null;
-let lastFetchTime = 0;
-const CACHE_DURATION = 300000; // 5 minutes
-
-export const refreshCurrencyRates = async (): Promise<void> => {
-  lastFetchTime = 0;
-  ratesCache = null;
-  await getCurrencyRates();
-};
-
-const getCurrencyRates = async (): Promise<Record<string, number>> => {
-  const currentTime = Date.now();
-  
-  if (ratesCache && (currentTime - lastFetchTime) < CACHE_DURATION) {
-    return ratesCache;
-  }
-
-  try {
-    const { data, error } = await supabase
-      .from('currencies')
-      .select('code, rate')
-      .eq('status', 'active');
-
-    if (error) {
-      console.error('Error fetching currency rates:', error);
-      return ratesCache || { USD: 0.0016, SSP: 1 };
-    }
-
-    const rates = data.reduce((acc: Record<string, number>, curr: CurrencyRate) => ({
-      ...acc,
-      [curr.code]: curr.rate
-    }), {});
-
-    ratesCache = rates;
-    lastFetchTime = currentTime;
-    return rates;
-  } catch (error) {
-    console.error('Error in getCurrencyRates:', error);
-    return ratesCache || { USD: 0.0016, SSP: 1 };
-  }
+// Mock currency rates - in a real app, these would come from an API
+const CURRENCY_RATES: CurrencyRates = {
+  SSP: 1,      // South Sudanese Pound (base)
+  USD: 0.0015, // US Dollar
+  EUR: 0.0014, // Euro
+  GBP: 0.0012, // British Pound
 };
 
 export const convertCurrency = async (
   amount: number,
-  fromCurrency: SupportedCurrency,
-  toCurrency: SupportedCurrency
+  fromCurrency: string,
+  toCurrency: string
 ): Promise<number> => {
-  try {
-    if (fromCurrency === toCurrency) {
-      return Math.round(amount);
-    }
-    
-    const rates = await getCurrencyRates();
-    
-    if (!rates[fromCurrency] || !rates[toCurrency]) {
-      console.error('Invalid currency code', { fromCurrency, toCurrency, rates });
-      return Math.round(amount);
-    }
+  if (fromCurrency === toCurrency) {
+    return amount;
+  }
 
-    const result = Math.round(amount * rates[toCurrency] / rates[fromCurrency]);
-    return result;
+  try {
+    // Convert to base currency (SSP) first, then to target currency
+    const baseAmount = amount / (CURRENCY_RATES[fromCurrency] || 1);
+    const convertedAmount = baseAmount * (CURRENCY_RATES[toCurrency] || 1);
+    
+    return Math.round(convertedAmount * 100) / 100; // Round to 2 decimal places
   } catch (error) {
-    console.error('Error converting currency:', error);
-    return Math.round(amount);
+    console.error('Currency conversion error:', error);
+    return amount; // Return original amount on error
   }
 };
 
-// Initialize rates cache
-getCurrencyRates().catch(console.error);
+export const formatCurrency = (amount: number, currency: string): string => {
+  return `${currency} ${amount.toLocaleString()}`;
+};
+
+export const getSupportedCurrencies = (): string[] => {
+  return Object.keys(CURRENCY_RATES);
+};

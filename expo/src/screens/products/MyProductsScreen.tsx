@@ -1,99 +1,139 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  Image,
   ActivityIndicator,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { useMyProducts } from '../../hooks/useMyProducts';
-import { getStorageUrl } from '../../utils/storage';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '../../integrations/supabase/client';
+import { useAuth } from '../../contexts/AuthContext';
+import { ProductCard } from '../../components/ProductCard';
+import { EmptyState } from '../../components/EmptyState';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 
 export default function MyProductsScreen() {
   const navigation = useNavigation();
-  const {
-    products,
-    isLoading,
-    handleDelete,
-    isProfileComplete,
-  } = useMyProducts();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
 
-  const getProductImageUrl = (product: any) => {
-    const mainImage = product.product_images?.find((img: any) => img.is_main);
-    return getStorageUrl(mainImage?.storage_path || product.storage_path);
+  const { data: products = [], isLoading, refetch } = useQuery({
+    queryKey: ['my-products', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from('products')
+        .select(`
+          *,
+          product_images(*)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const deleteProductMutation = useMutation({
+    mutationFn: async (productId: string) => {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-products'] });
+      Alert.alert('Success', 'Product deleted successfully');
+    },
+    onError: (error) => {
+      Alert.alert('Error', 'Failed to delete product');
+      console.error('Delete error:', error);
+    },
+  });
+
+  const handleEditProduct = (product: any) => {
+    navigation.navigate('EditProduct' as never, { productId: product.id } as never);
   };
 
-  const handleEditProduct = (productId: string) => {
-    navigation.navigate('EditProduct' as never, { productId } as never);
-  };
-
-  const renderProduct = ({ item }: { item: any }) => {
-    const imageUrl = getProductImageUrl(item);
-    
-    return (
-      <View style={styles.productCard}>
-        <Image 
-          source={{ uri: imageUrl }}
-          style={styles.productImage}
-          defaultSource={require('../../assets/placeholder.png')}
-        />
-        <View style={styles.productInfo}>
-          <Text style={styles.productTitle} numberOfLines={2}>
-            {item.title}
-          </Text>
-          <Text style={styles.productPrice}>
-            {item.currency} {Math.round(item.price).toLocaleString()}
-          </Text>
-          <View style={styles.productMeta}>
-            <Text style={styles.productStatus}>
-              Status: {item.product_status}
-            </Text>
-            <Text style={styles.productQuantity}>
-              Qty: {item.available_quantity}
-            </Text>
-          </View>
-        </View>
-        <View style={styles.productActions}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => handleEditProduct(item.id)}
-          >
-            <Ionicons name="pencil" size={20} color="#6366F1" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.deleteButton]}
-            onPress={() => handleDelete(item.id)}
-          >
-            <Ionicons name="trash" size={20} color="#EF4444" />
-          </TouchableOpacity>
-        </View>
-      </View>
+  const handleDeleteProduct = (productId: string) => {
+    Alert.alert(
+      'Delete Product',
+      'Are you sure you want to delete this product?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => deleteProductMutation.mutate(productId)
+        },
+      ]
     );
   };
 
-  if (!isProfileComplete) {
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  };
+
+  const renderProduct = ({ item }: { item: any }) => (
+    <View style={styles.productContainer}>
+      <ProductCard
+        product={item}
+        onPress={() => navigation.navigate('ProductDetail' as never, { productId: item.id } as never)}
+      />
+      <View style={styles.productActions}>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.editButton]}
+          onPress={() => handleEditProduct(item)}
+        >
+          <Ionicons name="pencil" size={16} color="white" />
+          <Text style={styles.actionButtonText}>Edit</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[styles.actionButton, styles.deleteButton]}
+          onPress={() => handleDeleteProduct(item.id)}
+        >
+          <Ionicons name="trash" size={16} color="white" />
+          <Text style={styles.actionButtonText}>Delete</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  if (!user) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.incompleteProfile}>
-          <Ionicons name="warning" size={64} color="#F59E0B" />
-          <Text style={styles.warningTitle}>Complete Your Profile</Text>
-          <Text style={styles.warningText}>
-            Please complete your profile before adding products
-          </Text>
-          <TouchableOpacity
-            style={styles.completeButton}
-            onPress={() => navigation.navigate('EditProfile' as never)}
-          >
-            <Text style={styles.completeButtonText}>Complete Profile</Text>
-          </TouchableOpacity>
-        </View>
+        <EmptyState
+          icon="person-outline"
+          title="Not Logged In"
+          description="Please log in to view your products"
+          actionText="Go to Login"
+          onAction={() => navigation.navigate('Login' as never)}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <LoadingSpinner text="Loading your products..." />
       </SafeAreaView>
     );
   }
@@ -110,30 +150,23 @@ export default function MyProductsScreen() {
         </TouchableOpacity>
       </View>
 
-      {isLoading ? (
-        <View style={styles.loading}>
-          <ActivityIndicator size="large" color="#6366F1" />
-        </View>
-      ) : products.length === 0 ? (
-        <View style={styles.emptyState}>
-          <Ionicons name="bag-outline" size={64} color="#6B7280" />
-          <Text style={styles.emptyTitle}>No Products Yet</Text>
-          <Text style={styles.emptyText}>
-            Start selling by adding your first product
-          </Text>
-          <TouchableOpacity
-            style={styles.addFirstButton}
-            onPress={() => navigation.navigate('AddProduct' as never)}
-          >
-            <Text style={styles.addFirstButtonText}>Add Product</Text>
-          </TouchableOpacity>
-        </View>
+      {products.length === 0 ? (
+        <EmptyState
+          icon="bag-outline"
+          title="No Products Yet"
+          description="Start selling by adding your first product"
+          actionText="Add Product"
+          onAction={() => navigation.navigate('AddProduct' as never)}
+        />
       ) : (
         <FlatList
           data={products}
           renderItem={renderProduct}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.productsList}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
           showsVerticalScrollIndicator={false}
         />
       )}
@@ -168,130 +201,37 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  loading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  incompleteProfile: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  warningTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  warningText: {
-    fontSize: 16,
-    color: '#6B7280',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  completeButton: {
-    backgroundColor: '#F59E0B',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  completeButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  emptyTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#6B7280',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  addFirstButton: {
-    backgroundColor: '#6366F1',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  addFirstButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   productsList: {
     padding: 16,
   },
-  productCard: {
-    backgroundColor: 'white',
-    borderRadius: 8,
+  productContainer: {
     marginBottom: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    flexDirection: 'row',
-    overflow: 'hidden',
-  },
-  productImage: {
-    width: 80,
-    height: 80,
-    backgroundColor: '#F3F4F6',
-  },
-  productInfo: {
-    flex: 1,
-    padding: 12,
-  },
-  productTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 4,
-  },
-  productPrice: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#059669',
-    marginBottom: 4,
-  },
-  productMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  productStatus: {
-    fontSize: 12,
-    color: '#6B7280',
-    textTransform: 'capitalize',
-  },
-  productQuantity: {
-    fontSize: 12,
-    color: '#6B7280',
   },
   productActions: {
     flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
+    justifyContent: 'space-between',
+    marginTop: 8,
+    paddingHorizontal: 4,
   },
   actionButton: {
-    padding: 8,
-    marginLeft: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+    flex: 0.48,
+    justifyContent: 'center',
+  },
+  editButton: {
+    backgroundColor: '#059669',
   },
   deleteButton: {
-    // Additional styling for delete button if needed
+    backgroundColor: '#DC2626',
+  },
+  actionButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 4,
   },
 });

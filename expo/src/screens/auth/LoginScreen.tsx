@@ -1,30 +1,34 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
+  StyleSheet,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '../../contexts/AuthContext';
-import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { supabase } from '../../integrations/supabase/client';
+import { useAuth } from '../../contexts/AuthContext';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 
 export default function LoginScreen() {
+  const navigation = useNavigation();
+  const { session } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLogin, setIsLogin] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const { signIn, signUp, session } = useAuth();
-  const navigation = useNavigation();
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
 
-  React.useEffect(() => {
+  // Redirect if already logged in
+  useEffect(() => {
     if (session) {
       navigation.navigate('Main' as never);
     }
@@ -36,86 +40,124 @@ export default function LoginScreen() {
       return;
     }
 
-    setLoading(true);
-    try {
-      const { error } = isLogin 
-        ? await signIn(email, password)
-        : await signUp(email, password);
+    setIsLoading(true);
 
-      if (error) {
-        Alert.alert('Error', error.message);
-      } else if (isLogin) {
-        navigation.navigate('Main' as never);
+    try {
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location?.origin || 'exp://localhost:8081'}/`,
+          },
+        });
+
+        if (error) throw error;
+
+        Alert.alert(
+          'Success',
+          'Account created successfully! Please check your email to verify your account.',
+          [{ text: 'OK', onPress: () => setIsSignUp(false) }]
+        );
       } else {
-        Alert.alert('Success', 'Account created! Please sign in.');
-        setIsLogin(true);
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+
+        // Navigation will happen automatically via the auth state change
       }
-    } catch (error) {
-      Alert.alert('Error', 'An unexpected error occurred');
+    } catch (error: any) {
+      Alert.alert(
+        'Error',
+        error.message || (isSignUp ? 'Failed to create account' : 'Failed to sign in')
+      );
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <LoadingSpinner text={isSignUp ? 'Creating account...' : 'Signing in...'} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
+        style={styles.keyboardAvoid}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
-            <Text style={styles.arabicTitle}>السوق الحر</Text>
-            <Text style={styles.title}>Welcome to Our Marketplace</Text>
+            <Text style={styles.title}>
+              {isSignUp ? 'Create Account' : 'Welcome Back'}
+            </Text>
             <Text style={styles.subtitle}>
-              {isLogin ? 'Sign in to your account' : 'Create a new account'}
+              {isSignUp 
+                ? 'Sign up to start selling your products' 
+                : 'Sign in to your account'
+              }
             </Text>
           </View>
 
           <View style={styles.form}>
             <View style={styles.inputContainer}>
-              <Ionicons name="mail-outline" size={20} color="#6B7280" style={styles.inputIcon} />
+              <Text style={styles.label}>Email</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Email"
                 value={email}
                 onChangeText={setEmail}
+                placeholder="Enter your email"
                 keyboardType="email-address"
                 autoCapitalize="none"
-                autoCorrect={false}
+                autoComplete="email"
               />
             </View>
 
             <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed-outline" size={20} color="#6B7280" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoCapitalize="none"
-              />
+              <Text style={styles.label}>Password</Text>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={styles.passwordInput}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="Enter your password"
+                  secureTextEntry={!showPassword}
+                  autoComplete="password"
+                />
+                <TouchableOpacity
+                  style={styles.eyeButton}
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  <Ionicons 
+                    name={showPassword ? "eye-off" : "eye"} 
+                    size={20} 
+                    color="#6B7280" 
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
 
-            <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDisabled]}
-              onPress={handleAuth}
-              disabled={loading}
-            >
-              <Text style={styles.buttonText}>
-                {loading ? 'Loading...' : isLogin ? 'Sign In' : 'Sign Up'}
+            <TouchableOpacity style={styles.authButton} onPress={handleAuth}>
+              <Text style={styles.authButtonText}>
+                {isSignUp ? 'Create Account' : 'Sign In'}
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.switchButton}
-              onPress={() => setIsLogin(!isLogin)}
+              onPress={() => setIsSignUp(!isSignUp)}
             >
               <Text style={styles.switchText}>
-                {isLogin 
-                  ? "Don't have an account? Sign Up" 
-                  : "Already have an account? Sign In"
+                {isSignUp 
+                  ? 'Already have an account? Sign In' 
+                  : "Don't have an account? Sign Up"
                 }
               </Text>
             </TouchableOpacity>
@@ -131,7 +173,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F9FAFB',
   },
-  keyboardView: {
+  keyboardAvoid: {
     flex: 1,
   },
   scrollContent: {
@@ -143,18 +185,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 40,
   },
-  arabicTitle: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: '#F97316',
-    marginBottom: 10,
-  },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#111827',
     marginBottom: 8,
-    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
@@ -162,38 +197,58 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   form: {
-    width: '100%',
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'white',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    marginBottom: 16,
-    paddingHorizontal: 12,
+    marginBottom: 20,
   },
-  inputIcon: {
-    marginRight: 8,
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 8,
   },
   input: {
-    flex: 1,
-    paddingVertical: 16,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     fontSize: 16,
-    color: '#111827',
+    backgroundColor: 'white',
   },
-  button: {
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    backgroundColor: 'white',
+  },
+  passwordInput: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+  },
+  eyeButton: {
+    padding: 10,
+  },
+  authButton: {
     backgroundColor: '#6366F1',
     borderRadius: 8,
-    paddingVertical: 16,
+    paddingVertical: 14,
     alignItems: 'center',
     marginBottom: 16,
   },
-  buttonDisabled: {
-    backgroundColor: '#9CA3AF',
-  },
-  buttonText: {
+  authButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
@@ -204,5 +259,6 @@ const styles = StyleSheet.create({
   switchText: {
     color: '#6366F1',
     fontSize: 14,
+    fontWeight: '500',
   },
 });

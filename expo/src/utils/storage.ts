@@ -1,36 +1,27 @@
 
-import { supabase } from '../integrations/supabase/client';
-
-export const getStorageUrl = (path: string): string => {
-  try {
-    if (!path || path.trim() === '') {
-      return 'https://via.placeholder.com/300x300?text=No+Image';
-    }
-    
-    const cleanPath = path.trim();
-    const { data } = supabase.storage.from('images').getPublicUrl(cleanPath);
-    
-    if (!data || !data.publicUrl) {
-      return 'https://via.placeholder.com/300x300?text=No+Image';
-    }
-    
-    return data.publicUrl;
-  } catch (error) {
-    console.error('Error getting storage URL:', error);
-    return 'https://via.placeholder.com/300x300?text=No+Image';
+export const getStorageUrl = (path: string | null | undefined): string => {
+  if (!path) {
+    return 'https://via.placeholder.com/400x300?text=No+Image';
   }
+
+  // If it's already a full URL, return it
+  if (path.startsWith('http')) {
+    return path;
+  }
+
+  // For placeholder or demo images
+  if (path === 'placeholder.svg' || path.includes('placeholder')) {
+    return 'https://via.placeholder.com/400x300?text=Product+Image';
+  }
+
+  // Construct Supabase storage URL
+  const supabaseUrl = 'https://izolcgjxobgendljwoan.supabase.co';
+  return `${supabaseUrl}/storage/v1/object/public/images/${path}`;
 };
 
-export const validateImageUrl = async (url: string): Promise<boolean> => {
-  if (!url || url.includes('placeholder')) {
-    return false;
-  }
-  
-  try {
-    const response = await fetch(url, { method: 'HEAD' });
-    return response.ok;
-  } catch (error) {
-    console.error('Error validating image URL:', error);
-    return false;
-  }
+export const uploadImage = async (uri: string, fileName: string) => {
+  // This is a placeholder for image upload functionality
+  // In a real implementation, you would upload to Supabase storage
+  console.log('Uploading image:', uri, fileName);
+  return `uploaded/${fileName}`;
 };
