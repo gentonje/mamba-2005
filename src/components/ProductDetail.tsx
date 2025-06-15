@@ -134,7 +134,6 @@ const ProductDetail = ({
           similarProducts={similarProducts}
           getProductImageUrl={getProductImageUrl}
           onProductClick={handleSimilarProductClick}
-          selectedCurrency={selectedCurrency}
           isLoading={isLoadingSimilar}
         />
       </div>
