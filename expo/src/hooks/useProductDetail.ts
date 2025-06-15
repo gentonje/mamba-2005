@@ -150,9 +150,10 @@ export const useProductDetail = (product: Product, selectedCurrency: string = "S
         const { data: { user } } = await supabase.auth.getUser();
         const viewerIdValue = user?.id || null;
         
-        // Format current date as YYYY-MM-DD
+        // Use a fixed date for logged-in users to ensure one view is counted, ever.
+        // For anonymous users, use the current date to count one view per day.
         const today = new Date();
-        const view_date = today.toISOString().split('T')[0];
+        const view_date = viewerIdValue ? '1970-01-01' : today.toISOString().split('T')[0];
         
         console.log(`Tracking view for product ${product.id} by viewer ${viewerIdValue || 'anonymous'} on ${view_date}`);
         

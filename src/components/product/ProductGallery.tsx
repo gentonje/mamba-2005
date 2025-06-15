@@ -48,12 +48,12 @@ export const ProductGallery = ({ images, selectedImage, onImageSelect, title }: 
 
   if (!images || images.length === 0) {
     return (
-      <div className="p-1 md:p-2">
+      <div className="p-0">
         <div className="aspect-square md:aspect-[4/3] relative overflow-hidden bg-gray-100 dark:bg-gray-800 border-0 rounded-lg">
           <ImageLoader
             src="/placeholder.svg"
             alt={title || "Product placeholder"}
-            className="w-full h-full object-contain"
+            className="w-full h-full object-cover"
             width={800}
             height={600}
             priority={true}
@@ -65,7 +65,7 @@ export const ProductGallery = ({ images, selectedImage, onImageSelect, title }: 
   }
 
   return (
-    <div className="p-1 md:p-2">
+    <div className="p-0">
       <Carousel setApi={setApi} className="w-full relative group">
         <CarouselContent>
           {images.map((image, index) => (
@@ -75,7 +75,7 @@ export const ProductGallery = ({ images, selectedImage, onImageSelect, title }: 
                   <ImageLoader
                     src={getStorageUrl(image.storage_path)}
                     alt={`${title} image ${index + 1}`}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-cover"
                     width={800}
                     height={800}
                     priority={index === 0}
