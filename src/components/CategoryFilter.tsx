@@ -59,11 +59,13 @@ export const CategoryFilter = ({
           : categories.map((category) => (
               <Button
                 key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
+                variant="outline"
                 onClick={() => onCategoryChange(category)}
                 className={cn(
                   "rounded-full transition-all duration-200 ease-in-out shadow-md hover:shadow-lg",
-                  selectedCategory === category && "shadow-glow-violet ring-2 ring-primary"
+                  selectedCategory === category
+                  ? "bg-blue-100 dark:bg-blue-900 border-blue-500 text-blue-700 dark:text-blue-300 ring-2 ring-blue-500 shadow-glow-blue"
+                  : ""
                 )}
               >
                 {category === 'all' ? 'All Categories' : category}

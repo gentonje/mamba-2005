@@ -4,7 +4,8 @@ import ProductList from "@/components/ProductList";
 import { ProductFilters } from "@/components/ProductFilters";
 import ProductDetail from "@/components/ProductDetail";
 import { CategoryFilter } from "@/components/CategoryFilter";
-import { CountiesFilter } from "@/components/CountiesFilter";
+import { RegionSelector } from "@/components/RegionSelector";
+import { CountryCarousel } from "@/components/CountryCarousel";
 import { Product } from "@/types/product";
 import { SupportedCurrency } from "@/utils/currencyConverter";
 import { useSelectedCountry } from "@/Routes";
@@ -146,7 +147,9 @@ const Index = ({
   
   const handleCountryChange = (country: string) => {
     console.log("Country changed in Index to:", country);
-    setLocalSelectedCountry(country);
+    if(countryContext?.setSelectedCountry) {
+        countryContext.setSelectedCountry(country);
+    }
     // Reset region when country changes
     setSelectedRegion("all");
   };
@@ -194,11 +197,15 @@ const Index = ({
         />
         
         <div className="flex flex-col gap-2 mb-4">
+          <CountryCarousel
+            selectedCountry={effectiveCountry}
+            onCountryChange={handleCountryChange}
+          />
           <div className="flex flex-row items-center gap-2 w-full">
             <div className="flex-grow">
-              <CountiesFilter 
-                selectedCounty={selectedRegion}
-                onCountyChange={handleRegionChange}
+              <RegionSelector 
+                selectedRegion={selectedRegion}
+                onRegionChange={handleRegionChange}
                 selectedCountry={effectiveCountry}
               />
             </div>

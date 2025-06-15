@@ -12,20 +12,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { CountrySelector } from "./navigation/CountrySelector";
 
 interface NavigationProps {
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
-  selectedCountry?: string;
-  onCountryChange?: (country: string) => void;
 }
 
 export const Navigation = ({ 
   searchQuery = "", 
   onSearchChange,
-  selectedCountry = "all", // Default to all countries
-  onCountryChange = () => {}
 }: NavigationProps) => {
   const navigate = useNavigate();
   const { session } = useAuth();
@@ -111,14 +106,7 @@ export const Navigation = ({
           transition={{ duration: 0.2 }}
         >
           <div className="max-w-7xl mx-auto px-4">
-            <div className="flex justify-between items-center h-14">
-              <div className="flex items-center gap-2">
-                <CountrySelector 
-                  selectedCountry={selectedCountry} 
-                  onCountryChange={onCountryChange} 
-                />
-              </div>
-
+            <div className="flex justify-end items-center h-14">
               <div className="flex items-center gap-2">
                 {session && (
                   <>
