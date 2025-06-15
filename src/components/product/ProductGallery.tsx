@@ -2,6 +2,7 @@
 import { getStorageUrl } from "@/utils/storage";
 import { useState, useEffect } from "react";
 import { ImageLoader } from "../ImageLoader";
+import { Skeleton } from "../ui/skeleton";
 import {
   Carousel,
   CarouselContent,
@@ -21,6 +22,7 @@ interface ProductGalleryProps {
 
 export const ProductGallery = ({ images, selectedImage, onImageSelect, title }: ProductGalleryProps) => {
   const [api, setApi] = useState<CarouselApi>();
+  const [imagesLoaded, setImagesLoaded] = useState(false);
 
   useEffect(() => {
     if (!api) {
@@ -46,6 +48,13 @@ export const ProductGallery = ({ images, selectedImage, onImageSelect, title }: 
     };
   }, [api, images, selectedImage, onImageSelect]);
 
+  useEffect(() => {
+    // Set loading state based on whether images exist
+    if (images && images.length > 0) {
+      setImagesLoaded(true);
+    }
+  }, [images]);
+
   if (!images || images.length === 0) {
     return (
       <div className="p-0">
@@ -59,6 +68,20 @@ export const ProductGallery = ({ images, selectedImage, onImageSelect, title }: 
             priority={true}
             glowEffect={true}
           />
+        </div>
+      </div>
+    );
+  }
+
+  // Show skeleton loading state while images are being processed
+  if (!imagesLoaded) {
+    return (
+      <div className="p-0">
+        <Skeleton className="aspect-square w-full rounded-lg" />
+        <div className="flex gap-2 justify-center mt-2">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="w-16 h-16 md:w-20 md:h-20 rounded-lg" />
+          ))}
         </div>
       </div>
     );

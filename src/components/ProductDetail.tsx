@@ -10,6 +10,7 @@ import { SupportedCurrency } from "@/utils/currencyConverter";
 import { useProductDetail } from "@/hooks/useProductDetail";
 import { ProductTabs } from "./product/detail/ProductTabs";
 import { ProductSimilarSection } from "./product/detail/ProductSimilarSection";
+import { ProductDetailSkeleton } from "./product/detail/ProductDetailSkeleton";
 import { Eye } from "lucide-react";
 import { useInView } from "react-intersection-observer";
 
@@ -19,6 +20,7 @@ interface ProductDetailProps {
   onBack: () => void;
   selectedCurrency?: SupportedCurrency;
   setSelectedProduct?: (product: Product) => void;
+  isLoading?: boolean;
 }
 
 const ProductDetail = ({ 
@@ -26,7 +28,8 @@ const ProductDetail = ({
   onBack, 
   getProductImageUrl,
   selectedCurrency = "USD",
-  setSelectedProduct
+  setSelectedProduct,
+  isLoading = false
 }: ProductDetailProps) => {
   const topRef = useRef<HTMLDivElement>(null);
   const { ref: similarSectionRef, inView: similarSectionInView } = useInView({
@@ -49,6 +52,15 @@ const ProductDetail = ({
   useEffect(() => {
     topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [product.id]);
+
+  // Show loading skeleton if product is loading or if no product data
+  if (isLoading || !product || !product.id) {
+    return (
+      <div ref={topRef} className="w-full mx-0 px-0">
+        <ProductDetailSkeleton />
+      </div>
+    );
+  }
 
   // Update product with latest view count if available
   const displayProduct = {
