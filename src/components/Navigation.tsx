@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,8 +13,6 @@ import { cn } from "@/lib/utils";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { CountrySelector } from "./navigation/CountrySelector";
-import { CurrencySelector } from "@/components/CurrencySelector";
-import { SupportedCurrency } from "@/utils/currencyConverter";
 
 interface NavigationProps {
   searchQuery?: string;
@@ -36,9 +33,6 @@ export const Navigation = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { scrollDirection, isAtTop } = useScrollDirection();
-  const [selectedCurrency, setSelectedCurrency] = useState<SupportedCurrency>(
-    (localStorage.getItem('selectedCurrency') as SupportedCurrency) || "KES"
-  );
   
   // Keep top nav visible when at top of page or scrolling up
   const shouldShowNav = scrollDirection === ScrollDirection.UP || isAtTop;
@@ -94,12 +88,6 @@ export const Navigation = ({
     getUser();
   }, [session]);
 
-  const handleCurrencyChange = (currency: SupportedCurrency) => {
-    setSelectedCurrency(currency);
-    localStorage.setItem('selectedCurrency', currency);
-    window.dispatchEvent(new CustomEvent('currencyChange', { detail: currency }));
-  };
-
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -128,10 +116,6 @@ export const Navigation = ({
                 <CountrySelector 
                   selectedCountry={selectedCountry} 
                   onCountryChange={onCountryChange} 
-                />
-                <CurrencySelector
-                  value={selectedCurrency}
-                  onValueChange={handleCurrencyChange}
                 />
               </div>
 

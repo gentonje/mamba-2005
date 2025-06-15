@@ -1,14 +1,10 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ProductCategory } from "@/types/product";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface CategoryFilterProps {
   selectedCategory: string;
@@ -40,7 +36,9 @@ export const CategoryFilter = ({
         const productCategories = Object.values(ProductCategory);
         
         // Make sure we convert to string[] properly
-        setCategories(data?.map(c => c.name as string) || productCategories);
+        const fetchedCategories = data?.map(c => c.name as string) || productCategories;
+        setCategories(["all", ...fetchedCategories]);
+
       } catch (error) {
         console.error("Failed to fetch categories:", error);
       } finally {
@@ -52,24 +50,27 @@ export const CategoryFilter = ({
   }, []);
 
   return (
-    <div className="w-full max-w-xs">
-      <Select
-        value={selectedCategory}
-        onValueChange={onCategoryChange}
-        disabled={loading}
-      >
-        <SelectTrigger className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-          <SelectValue placeholder={loading ? "Loading categories..." : "Select Category"} />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Categories</SelectItem>
-          {categories.map((category) => (
-            <SelectItem key={category} value={category}>
-              {category}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <ScrollArea className="w-full whitespace-nowrap rounded-md">
+      <div className="flex w-max space-x-2 p-2">
+        {loading 
+          ? Array.from({ length: 8 }).map((_, i) => (
+              <Button key={i} variant="outline" className="rounded-full animate-pulse h-10 w-24 bg-muted" disabled></Button>
+            ))
+          : categories.map((category) => (
+              <Button
+                key={category}
+                variant={selectedCategory === category ? "default" : "outline"}
+                onClick={() => onCategoryChange(category)}
+                className={cn(
+                  "rounded-full transition-all duration-200 ease-in-out shadow-md hover:shadow-lg",
+                  selectedCategory === category && "shadow-glow-violet ring-2 ring-primary"
+                )}
+              >
+                {category === 'all' ? 'All Categories' : category}
+              </Button>
+        ))}
+      </div>
+      <ScrollBar orientation="horizontal" />
+    </ScrollArea>
   );
 };

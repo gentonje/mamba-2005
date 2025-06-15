@@ -13,6 +13,7 @@ import { useCurrencyFix } from "@/hooks/useCurrencyFix";
 import { useProducts } from "@/hooks/useProducts";
 import { supabase } from "@/integrations/supabase/client";
 import { ProductDetailSkeleton } from "@/components/product/detail/ProductDetailSkeleton";
+import { CurrencySelector } from "@/components/CurrencySelector";
 
 interface IndexProps {
   selectedCountry?: string;
@@ -51,16 +52,24 @@ const Index = ({
     }
   }, [propSelectedCountry, countryContext?.selectedCountry, localSelectedCountry]);
 
+  const handleCurrencyChange = (currency: SupportedCurrency) => {
+    setSelectedCurrency(currency);
+    localStorage.setItem('selectedCurrency', currency);
+    window.dispatchEvent(new CustomEvent('currencyChange', { detail: currency }));
+  };
+
   useEffect(() => {
     const handleCurrencyChange = (event: Event) => {
       const customEvent = event as CustomEvent<SupportedCurrency>;
-      setSelectedCurrency(customEvent.detail);
+      if (customEvent.detail !== selectedCurrency) {
+        setSelectedCurrency(customEvent.detail);
+      }
     };
     window.addEventListener('currencyChange', handleCurrencyChange);
     return () => {
       window.removeEventListener('currencyChange', handleCurrencyChange);
     };
-  }, []);
+  }, [selectedCurrency]);
 
   // Use our hook to fetch products with infinite scrolling
   const {
@@ -184,28 +193,27 @@ const Index = ({
           ]}
         />
         
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
-          <div className="flex flex-col gap-2 w-full">
-            {/* One row with county selector and categories side by side */}
-            <div className="flex flex-row gap-2 w-full">
-              <div className="w-1/2">
-                <CountiesFilter 
-                  selectedCounty={selectedRegion}
-                  onCountyChange={handleRegionChange}
-                  selectedCountry={effectiveCountry}
-                />
-              </div>
-              
-              <div className="w-1/2">
-                <CategoryFilter 
-                  selectedCategory={selectedCategory}
-                  onCategoryChange={handleCategoryChange}
-                />
-              </div>
+        <div className="flex flex-col gap-2 mb-4">
+          <div className="flex flex-row items-center gap-2 w-full">
+            <div className="flex-grow">
+              <CountiesFilter 
+                selectedCounty={selectedRegion}
+                onCountyChange={handleRegionChange}
+                selectedCountry={effectiveCountry}
+              />
             </div>
+            <CurrencySelector
+              value={selectedCurrency}
+              onValueChange={handleCurrencyChange}
+            />
           </div>
           
-          <ProductFilters onSearchChange={handleSearchChange} />
+          <CategoryFilter 
+            selectedCategory={selectedCategory}
+            onCategoryChange={handleCategoryChange}
+          />
+          
+          <ProductFilters onSearchChange={handleSearchChange} className="w-full sm:max-w-xs sm:self-end" />
         </div>
       </div>
       

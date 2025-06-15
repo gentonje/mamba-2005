@@ -1,15 +1,10 @@
 
 import { useEffect, useState, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
-import { MapPin } from "lucide-react";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface CountiesFilterProps {
   selectedCounty: string;
@@ -30,21 +25,8 @@ export const CountiesFilter = ({
 
   useEffect(() => {
     const fetchDistricts = async () => {
-      // Skip if the country hasn't changed to prevent unnecessary fetches
-      if (previousCountry.current === selectedCountry && districts.length > 0) return;
-      
-      try {
-        setLoading(true);
-        
-        // Skip the fetch if the country is "all", but don't disable the control
-        if (selectedCountry === "all") {
-          setDistricts([]);
-          setLoading(false);
-          previousCountry.current = selectedCountry;
-          return;
-        }
-          
-        // Use districts table for all countries
+      setLoading(true);
+      if (selectedCountry && selectedCountry !== "all") {
         const { data, error } = await supabase
           .from("districts")
           .select("id, name")
@@ -54,88 +36,72 @@ export const CountiesFilter = ({
         if (error) {
           console.error("Error fetching districts:", error);
           toast.error("Failed to load districts");
-          return;
+          setDistricts([]);
+        } else {
+          setDistricts(data || []);
         }
-
-        console.log(`Fetched ${data?.length || 0} districts for country ${selectedCountry}`);
-        setDistricts(data || []);
-        previousCountry.current = selectedCountry;
-          
-        // Auto-select first district if we have districts and all option is disabled
-        if (!showAllOption && data && data.length > 0 && (!selectedCounty || selectedCounty === "all")) {
-          onCountyChange(data[0].name);
-        }
-      } catch (error) {
-        console.error("Failed to fetch districts:", error);
-        toast.error("Failed to load districts");
-      } finally {
-        setLoading(false);
+      } else {
+        setDistricts([]);
       }
+      setLoading(false);
     };
 
     fetchDistricts();
     
-    // Reset county selection when country changes
     if (previousCountry.current !== selectedCountry) {
-      console.log("Country changed from", previousCountry.current, "to", selectedCountry, "- resetting county");
       onCountyChange(showAllOption ? "all" : "");
+      previousCountry.current = selectedCountry;
     }
-  }, [selectedCountry, onCountyChange, selectedCounty, showAllOption, districts.length]);
+  }, [selectedCountry, onCountyChange, showAllOption]);
 
-  // Memoize the trigger content to prevent unnecessary renders
-  const triggerContent = useMemo(() => {
-    if (selectedCounty === "all" || !selectedCounty) {
-      return (
-        <div className="flex items-center">
-          <MapPin className="w-4 h-4 mr-2" />
-          <span>All Districts</span>
-        </div>
-      );
-    } else {
-      return selectedCounty;
-    }
-  }, [selectedCounty]);
+  const allDistricts = useMemo(() => {
+    if (selectedCountry === "all" || !districts.length) return [];
+    return showAllOption ? [{id: 0, name: "all"}, ...districts] : districts;
+  }, [districts, showAllOption, selectedCountry]);
 
   const handleDistrictChange = (value: string) => {
-    console.log("District changed to:", value);
     onCountyChange(value);
   };
 
-  return (
-    <div className="w-full">
-      <Select
-        value={selectedCounty || (showAllOption ? "all" : "")}
-        onValueChange={handleDistrictChange}
-        // Only disable when explicitly undefined, not when "all"
-        disabled={loading || selectedCountry === undefined}
-      >
-        <SelectTrigger className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-          <SelectValue>
-            {selectedCountry === undefined ? (
-              "Select country first"
-            ) : loading ? (
-              "Loading districts..."
-            ) : (
-              triggerContent
-            )}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent className="z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-          {showAllOption && (
-            <SelectItem value="all">
-              <div className="flex items-center">
-                <MapPin className="w-4 h-4 mr-2" />
-                <span>All Districts</span>
-              </div>
-            </SelectItem>
-          )}
-          {districts.map((district) => (
-            <SelectItem key={district.id} value={district.name}>
-              {district.name}
-            </SelectItem>
+  if (selectedCountry === 'all') {
+    return <div className="flex items-center justify-center h-10 px-4 text-sm text-muted-foreground bg-gray-100 dark:bg-gray-800 rounded-full">Select a country to view districts</div>;
+  }
+
+  if (loading) {
+    return (
+      <ScrollArea className="w-full whitespace-nowrap rounded-md">
+        <div className="flex w-max space-x-2 p-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Button key={i} variant="outline" className="rounded-full animate-pulse h-10 w-24 bg-muted" disabled></Button>
           ))}
-        </SelectContent>
-      </Select>
-    </div>
+        </div>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
+    );
+  }
+
+  if (!loading && allDistricts.length === 0) {
+     return <div className="flex items-center justify-center h-10 px-4 text-sm text-muted-foreground bg-gray-100 dark:bg-gray-800 rounded-full">No districts found for this country.</div>;
+  }
+
+  return (
+    <ScrollArea className="w-full whitespace-nowrap rounded-md">
+      <div className="flex w-max space-x-2 p-2">
+        {allDistricts.map((district) => (
+          <Button
+            key={district.id}
+            variant={selectedCounty === district.name ? "default" : "outline"}
+            onClick={() => handleDistrictChange(district.name)}
+            className={cn(
+              "rounded-full transition-all duration-200 ease-in-out shadow-md hover:shadow-lg",
+              selectedCounty === district.name && "shadow-glow-violet ring-2 ring-primary"
+            )}
+          >
+            {district.name === 'all' ? 'All Districts' : district.name}
+          </Button>
+        ))}
+      </div>
+      <ScrollBar orientation="horizontal" />
+    </ScrollArea>
   );
 };
