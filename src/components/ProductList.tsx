@@ -1,4 +1,3 @@
-
 import React, { useCallback, memo } from "react";
 import { Product } from "@/types/product";
 import ProductCard from "./ProductCard";
@@ -13,7 +12,6 @@ interface ProductListProps {
   isLoading?: boolean;
   isFetchingNextPage?: boolean;
   observerRef?: (node?: Element | null) => void;
-  selectedCurrency: SupportedCurrency;
   showStatus?: boolean;
   onDelete?: (productId: string) => Promise<void>;
   isAdmin?: boolean;
@@ -40,7 +38,6 @@ export const ProductList = ({
   isLoading,
   isFetchingNextPage,
   observerRef,
-  selectedCurrency,
   showStatus = false,
   onDelete,
   isAdmin,
@@ -93,7 +90,6 @@ export const ProductList = ({
             product={product}
             getProductImageUrl={getProductImageUrl}
             onClick={() => onProductClick(product)}
-            selectedCurrency={selectedCurrency}
             showStatus={showStatus}
             onDelete={onDelete}
             isAdmin={isAdmin}
@@ -111,4 +107,3 @@ export const ProductList = ({
 };
 
 export default memo(ProductList);
-

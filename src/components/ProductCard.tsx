@@ -1,8 +1,6 @@
-
 import React, { memo, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Product } from "@/types/product";
-import { SupportedCurrency } from "@/utils/currencyConverter";
 import { useWishlistMutation } from "@/hooks/useWishlistMutation";
 import { ProductCardImage } from "./product/ProductCardImage";
 import { ProductCardContent } from "./product/ProductCardContent";
@@ -14,7 +12,6 @@ interface ProductCardProps {
   product: Product;
   getProductImageUrl: (product: Product) => string;
   onClick?: () => void;
-  selectedCurrency: SupportedCurrency;
   showStatus?: boolean;
   onDelete?: (productId: string) => Promise<void>;
   isAdmin?: boolean;
@@ -24,7 +21,6 @@ const ProductCard = ({
   product,
   getProductImageUrl,
   onClick,
-  selectedCurrency,
   showStatus = false,
   onDelete,
   isAdmin: isAdminProp
@@ -81,7 +77,6 @@ const ProductCard = ({
       
       <ProductCardContent
         product={product}
-        selectedCurrency={selectedCurrency}
       />
       
       {(isAdminProp || isAdmin) && onDelete && (
