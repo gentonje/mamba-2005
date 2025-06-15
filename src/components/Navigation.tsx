@@ -14,6 +14,8 @@ import { cn } from "@/lib/utils";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { CountrySelector } from "./navigation/CountrySelector";
+import { CurrencySelector } from "@/components/CurrencySelector";
+import { SupportedCurrency } from "@/utils/currencyConverter";
 
 interface NavigationProps {
   searchQuery?: string;
@@ -34,6 +36,9 @@ export const Navigation = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { scrollDirection, isAtTop } = useScrollDirection();
+  const [selectedCurrency, setSelectedCurrency] = useState<SupportedCurrency>(
+    (localStorage.getItem('selectedCurrency') as SupportedCurrency) || "KES"
+  );
   
   // Keep top nav visible when at top of page or scrolling up
   const shouldShowNav = scrollDirection === ScrollDirection.UP || isAtTop;
@@ -89,6 +94,12 @@ export const Navigation = ({
     getUser();
   }, [session]);
 
+  const handleCurrencyChange = (currency: SupportedCurrency) => {
+    setSelectedCurrency(currency);
+    localStorage.setItem('selectedCurrency', currency);
+    window.dispatchEvent(new CustomEvent('currencyChange', { detail: currency }));
+  };
+
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -113,10 +124,14 @@ export const Navigation = ({
         >
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex justify-between items-center h-14">
-              <div className="flex justify-center">
+              <div className="flex items-center gap-2">
                 <CountrySelector 
                   selectedCountry={selectedCountry} 
                   onCountryChange={onCountryChange} 
+                />
+                <CurrencySelector
+                  value={selectedCurrency}
+                  onValueChange={handleCurrencyChange}
                 />
               </div>
 

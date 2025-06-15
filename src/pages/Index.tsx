@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import ProductList from "@/components/ProductList";
@@ -15,12 +16,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { CountrySelector } from "@/components/navigation/CountrySelector";
 
 interface IndexProps {
-  selectedCurrency?: SupportedCurrency;
   selectedCountry?: string;
 }
 
 const Index = ({ 
-  selectedCurrency = "USD",
   selectedCountry: propSelectedCountry = "all", // Default to "all"
 }: IndexProps) => {
   // Initialize currency fix
@@ -32,6 +31,9 @@ const Index = ({
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortOrder, setSortOrder] = useState("newest");
   const [localSelectedCountry, setLocalSelectedCountry] = useState(propSelectedCountry);
+  const [selectedCurrency, setSelectedCurrency] = useState<SupportedCurrency>(
+    (localStorage.getItem("selectedCurrency") as SupportedCurrency) || "KES"
+  );
   const location = useLocation();
   
   // Get country from context if available
@@ -48,6 +50,17 @@ const Index = ({
       setLocalSelectedCountry(countryContext.selectedCountry);
     }
   }, [propSelectedCountry, countryContext?.selectedCountry, localSelectedCountry]);
+
+  useEffect(() => {
+    const handleCurrencyChange = (event: Event) => {
+      const customEvent = event as CustomEvent<SupportedCurrency>;
+      setSelectedCurrency(customEvent.detail);
+    };
+    window.addEventListener('currencyChange', handleCurrencyChange);
+    return () => {
+      window.removeEventListener('currencyChange', handleCurrencyChange);
+    };
+  }, []);
 
   // Use our hook to fetch products with infinite scrolling
   const {
@@ -197,6 +210,7 @@ const Index = ({
           isLoading={isLoading}
           isFetchingNextPage={isFetchingNextPage}
           observerRef={loadMoreProducts}
+          selectedCurrency={selectedCurrency}
         />
       </div>
     </div>

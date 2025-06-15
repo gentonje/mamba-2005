@@ -4,6 +4,8 @@ import { ProductList } from "@/components/ProductList";
 import { ProductFilters } from "@/components/ProductFilters";
 import { CountiesFilter } from "@/components/CountiesFilter";
 import { useSelectedCountry } from "@/Routes";
+import { useState, useEffect } from "react";
+import { SupportedCurrency } from "@/utils/currencyConverter";
 
 interface ProductListingSectionProps {
   products: Product[];
@@ -48,6 +50,20 @@ export const ProductListingSection = ({
 }: ProductListingSectionProps) => {
   // Get country from context
   const { selectedCountry } = useSelectedCountry() || { selectedCountry: "1" };
+  const [selectedCurrency, setSelectedCurrency] = useState<SupportedCurrency>(
+    (localStorage.getItem("selectedCurrency") as SupportedCurrency) || "KES"
+  );
+
+  useEffect(() => {
+    const handleCurrencyChange = (event: Event) => {
+      const customEvent = event as CustomEvent<SupportedCurrency>;
+      setSelectedCurrency(customEvent.detail);
+    };
+    window.addEventListener('currencyChange', handleCurrencyChange);
+    return () => {
+      window.removeEventListener('currencyChange', handleCurrencyChange);
+    };
+  }, []);
   
   const handleSearchChange = (search: string) => {
     setSearchQuery(search);
@@ -79,6 +95,7 @@ export const ProductListingSection = ({
         isAdmin={isAdmin}
         emptyMessage={emptyMessage}
         isLoading={isLoading}
+        selectedCurrency={selectedCurrency}
       />
     </div>
   );

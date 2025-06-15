@@ -9,7 +9,7 @@ import { AspectRatio } from "../ui/aspect-ratio";
 import { useWishlistMutation } from "@/hooks/useWishlistMutation";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProductCardContent } from "./ProductCardContent";
-import { Skeleton } from "../ui/skeleton";
+import { LoadingIndicator } from "../my-products/LoadingIndicator";
 
 interface ProductSimilarProps {
   products: Product[];
@@ -18,20 +18,6 @@ interface ProductSimilarProps {
   selectedCurrency: SupportedCurrency;
   isLoading?: boolean;
 }
-
-const ProductSimilarSkeleton = () => (
-  <div className="w-full">
-    <div className="w-full rounded-xl overflow-hidden bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-1 shadow-sm">
-      <Skeleton className="h-[120px] w-full" />
-      <Skeleton className="h-5 w-2/3 m-1" />
-      <Skeleton className="h-3 w-full m-1" />
-      <div className="flex justify-between m-1 space-x-1">
-        <Skeleton className="h-5 w-16 rounded-md" />
-        <Skeleton className="h-5 w-12 rounded-md" />
-      </div>
-    </div>
-  </div>
-);
 
 export const ProductSimilar = ({ 
   products, 
@@ -44,12 +30,8 @@ export const ProductSimilar = ({
 
   if (isLoading) {
     return (
-      <div className="w-full">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1">
-          {[...Array(5)].map((_, index) => (
-            <ProductSimilarSkeleton key={index} />
-          ))}
-        </div>
+      <div className="w-full flex justify-center items-center h-48">
+        <LoadingIndicator />
       </div>
     );
   }
@@ -131,6 +113,7 @@ export const ProductSimilar = ({
                 {/* Use the ProductCardContent component without add to cart button */}
                 <ProductCardContent 
                   product={similarProduct}
+                  selectedCurrency={selectedCurrency}
                 />
               </Card>
             </div>

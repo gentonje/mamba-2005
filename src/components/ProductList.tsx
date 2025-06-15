@@ -1,14 +1,17 @@
+
 import React, { useCallback, memo } from "react";
 import { Product } from "@/types/product";
 import ProductCard from "./ProductCard";
 import { SupportedCurrency } from "@/utils/currencyConverter";
 import { useInView } from "react-intersection-observer";
-import { Skeleton } from "./ui/skeleton";
+import { LoadingIndicator } from "../my-products/LoadingIndicator";
+import { Loader2 } from "lucide-react";
 
 interface ProductListProps {
   products: Product[];
   getProductImageUrl: (product: Product) => string;
   onProductClick: (product: Product) => void;
+  selectedCurrency: SupportedCurrency;
   isLoading?: boolean;
   isFetchingNextPage?: boolean;
   observerRef?: (node?: Element | null) => void;
@@ -18,23 +21,11 @@ interface ProductListProps {
   emptyMessage?: string;
 }
 
-const ProductSkeleton = memo(() => (
-  <div className="w-full rounded-lg overflow-hidden bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 p-2 space-y-2">
-    <Skeleton className="w-full aspect-square" />
-    <Skeleton className="h-4 w-full" />
-    <Skeleton className="h-4 w-2/3" />
-    <div className="flex justify-between items-baseline pt-2">
-      <Skeleton className="h-6 w-1/3" />
-      <Skeleton className="h-4 w-1/4" />
-    </div>
-  </div>
-));
-ProductSkeleton.displayName = 'ProductSkeleton';
-
 export const ProductList = ({
   products,
   getProductImageUrl,
   onProductClick,
+  selectedCurrency,
   isLoading,
   isFetchingNextPage,
   observerRef,
@@ -57,12 +48,8 @@ export const ProductList = ({
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 px-1">
-        {[...Array(12)].map((_, index) => (
-          <div key={index} className="w-full">
-            <ProductSkeleton />
-          </div>
-        ))}
+      <div className="flex justify-center items-center h-64">
+        <LoadingIndicator />
       </div>
     );
   }
@@ -90,6 +77,7 @@ export const ProductList = ({
             product={product}
             getProductImageUrl={getProductImageUrl}
             onClick={() => onProductClick(product)}
+            selectedCurrency={selectedCurrency}
             showStatus={showStatus}
             onDelete={onDelete}
             isAdmin={isAdmin}
@@ -98,9 +86,9 @@ export const ProductList = ({
       ))}
       
       {isFetchingNextPage && (
-        <>
-          {[...Array(6)].map((_, i) => <div key={`skeleton-${i}`} className="w-full"><ProductSkeleton /></div>)}
-        </>
+        <div className="col-span-full flex justify-center items-center py-4">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
       )}
     </div>
   );
