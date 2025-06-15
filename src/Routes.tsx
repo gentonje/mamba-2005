@@ -1,11 +1,10 @@
-
 import React, { lazy, Suspense, useState, createContext, useContext } from 'react';
 import { Routes as RouterRoutes, Route, Navigate, useOutletContext } from 'react-router-dom';
 import { PrivateRoute } from '@/components/PrivateRoute';
 import { AdminRoute } from '@/components/routes/AdminRoute';
 import { SuperAdminRoute } from '@/components/routes/SuperAdminRoute';
 import { useAuth } from '@/contexts/AuthContext';
-import { Skeleton } from './components/ui/skeleton';
+import { LoadingIndicator } from './components/ui/LoadingIndicator';
 import { MainLayout } from '@/components/layouts/MainLayout';
 
 // Define outlet context type
@@ -33,13 +32,8 @@ const MyProducts = lazy(() => import('./pages/MyProducts'));
 
 // Loading fallback
 const PageLoader = () => (
-  <div className="container mx-auto p-4 mt-20">
-    <Skeleton className="h-12 w-full mb-4" />
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {[...Array(8)].map((_, i) => (
-        <Skeleton key={i} className="h-48 w-full" />
-      ))}
-    </div>
+  <div className="flex items-center justify-center h-screen">
+    <LoadingIndicator />
   </div>
 );
 

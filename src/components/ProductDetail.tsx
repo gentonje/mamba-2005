@@ -1,11 +1,10 @@
-
 import { Card, CardContent, CardFooter } from "./ui/card";
 import { Suspense } from "react";
 import { ProductGallery } from "./product/ProductGallery";
 import { ProductInfo } from "./product/ProductInfo";
 import { ProductActions } from "./product/ProductActions";
 import { Product } from "@/types/product";
-import { Skeleton } from "./ui/skeleton";
+import { LoadingIndicator } from "./ui/LoadingIndicator";
 import { SupportedCurrency } from "@/utils/currencyConverter";
 import { useProductDetail } from "@/hooks/useProductDetail";
 import { ProductTabs } from "./product/detail/ProductTabs";
@@ -94,7 +93,7 @@ const ProductDetail = ({
               </div>
 
               <div className="w-full">
-                <Suspense fallback={<Skeleton className="aspect-[4/3] w-full" />}>
+                <Suspense fallback={<LoadingIndicator />}>
                   <ProductGallery
                     images={displayProduct.product_images || []}
                     selectedImage={selectedImage}

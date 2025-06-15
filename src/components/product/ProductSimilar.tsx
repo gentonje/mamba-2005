@@ -1,6 +1,6 @@
+
 import { Card } from "../ui/card";
 import { Product } from "@/types/product";
-import { SupportedCurrency } from "@/utils/currencyConverter";
 import { useState, useEffect } from "react";
 import { ImageLoader } from "../ImageLoader";
 import { MapPin, Heart } from "lucide-react";
@@ -9,13 +9,12 @@ import { AspectRatio } from "../ui/aspect-ratio";
 import { useWishlistMutation } from "@/hooks/useWishlistMutation";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProductCardContent } from "./ProductCardContent";
-import { LoadingIndicator } from "../my-products/LoadingIndicator";
+import { LoadingIndicator } from "../ui/LoadingIndicator";
 
 interface ProductSimilarProps {
   products: Product[];
   getProductImageUrl: (product: Product) => string;
   onProductClick: (product: Product) => void;
-  selectedCurrency: SupportedCurrency;
   isLoading?: boolean;
 }
 
@@ -23,7 +22,6 @@ export const ProductSimilar = ({
   products, 
   getProductImageUrl, 
   onProductClick,
-  selectedCurrency,
   isLoading = false
 }: ProductSimilarProps) => {
   const { session } = useAuth();
@@ -113,7 +111,6 @@ export const ProductSimilar = ({
                 {/* Use the ProductCardContent component without add to cart button */}
                 <ProductCardContent 
                   product={similarProduct}
-                  selectedCurrency={selectedCurrency}
                 />
               </Card>
             </div>

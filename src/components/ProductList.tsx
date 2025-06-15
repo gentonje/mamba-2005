@@ -1,17 +1,14 @@
-
 import React, { useCallback, memo } from "react";
 import { Product } from "@/types/product";
 import ProductCard from "./ProductCard";
-import { SupportedCurrency } from "@/utils/currencyConverter";
 import { useInView } from "react-intersection-observer";
-import { LoadingIndicator } from "../my-products/LoadingIndicator";
+import { LoadingIndicator } from "@/components/ui/LoadingIndicator";
 import { Loader2 } from "lucide-react";
 
 interface ProductListProps {
   products: Product[];
   getProductImageUrl: (product: Product) => string;
   onProductClick: (product: Product) => void;
-  selectedCurrency: SupportedCurrency;
   isLoading?: boolean;
   isFetchingNextPage?: boolean;
   observerRef?: (node?: Element | null) => void;
@@ -25,7 +22,6 @@ export const ProductList = ({
   products,
   getProductImageUrl,
   onProductClick,
-  selectedCurrency,
   isLoading,
   isFetchingNextPage,
   observerRef,
@@ -77,7 +73,6 @@ export const ProductList = ({
             product={product}
             getProductImageUrl={getProductImageUrl}
             onClick={() => onProductClick(product)}
-            selectedCurrency={selectedCurrency}
             showStatus={showStatus}
             onDelete={onDelete}
             isAdmin={isAdmin}

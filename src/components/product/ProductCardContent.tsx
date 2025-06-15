@@ -7,12 +7,29 @@ import { Badge } from "../ui/badge";
 
 interface ProductCardContentProps {
   product: Product;
-  selectedCurrency: SupportedCurrency;
 }
 
-export const ProductCardContent = memo(({ product, selectedCurrency }: ProductCardContentProps) => {
+export const ProductCardContent = memo(({ product }: ProductCardContentProps) => {
   const [convertedPrice, setConvertedPrice] = useState<number | null>(null);
   const [isConverting, setIsConverting] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState<SupportedCurrency>('KES');
+
+  useEffect(() => {
+    const handleCurrencyChange = (event: Event) => {
+        const customEvent = event as CustomEvent<SupportedCurrency>;
+        setSelectedCurrency(customEvent.detail);
+    };
+
+    const currentCurrency = localStorage.getItem("selectedCurrency") as SupportedCurrency;
+    if (currentCurrency) {
+        setSelectedCurrency(currentCurrency);
+    }
+
+    window.addEventListener('currencyChange', handleCurrencyChange);
+    return () => {
+        window.removeEventListener('currencyChange', handleCurrencyChange);
+    };
+  }, []);
 
   useEffect(() => {
     const getConvertedPrice = async () => {

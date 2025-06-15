@@ -2,7 +2,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Info, MapPin, MessageSquare } from "lucide-react";
 import { Suspense } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingIndicator } from "@/components/ui/LoadingIndicator";
 import { ProductReviews } from "../ProductReviews";
 import { Product } from "@/types/product";
 
@@ -66,7 +66,7 @@ export const ProductTabs = ({ product, activeTab, onTabChange }: ProductTabsProp
         </TabsContent>
 
         <TabsContent value="reviews" className="pt-0 h-full m-0 p-1">
-          <Suspense fallback={<Skeleton className="h-48 w-full" />}>
+          <Suspense fallback={<LoadingIndicator />}>
             <ProductReviews 
               productId={product.id} 
               sellerId={product.seller_id || ''} 

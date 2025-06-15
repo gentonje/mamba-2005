@@ -1,6 +1,4 @@
-
 import { useState, useEffect, memo, useCallback } from "react";
-import { Skeleton } from "./ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 
 interface ImageLoaderProps {
@@ -113,8 +111,8 @@ export const ImageLoader = memo(({
   return (
     <>
       {isLoading && (
-        <Skeleton 
-          className={`${imageClasses} animate-pulse`}
+        <div 
+          className={`${imageClasses} animate-pulse bg-gray-200 dark:bg-gray-800`}
           style={{ width, height }}
         />
       )}

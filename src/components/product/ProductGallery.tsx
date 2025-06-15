@@ -1,6 +1,4 @@
-
 import { getStorageUrl } from "@/utils/storage";
-import { Skeleton } from "../ui/skeleton";
 import { useState, useEffect } from "react";
 import { ImageLoader } from "../ImageLoader";
 import { toast } from "sonner";

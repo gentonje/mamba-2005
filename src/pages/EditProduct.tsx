@@ -1,4 +1,3 @@
-
 import { useNavigate, useParams } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { EditProductForm } from "@/components/product/edit/EditProductForm";
@@ -7,7 +6,7 @@ import { productPageStyles as styles } from "@/styles/productStyles";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/product";
-import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingIndicator } from "@/components/ui/LoadingIndicator";
 import { toast } from "sonner";
 import { useState } from "react";
 import { updateProduct } from "@/services/productService";
@@ -119,12 +118,8 @@ const EditProduct = () => {
       <div className={styles.container}>
         <Navigation />
         <div className={styles.mainContent}>
-          <div className="mx-1 my-1 px-1 py-1">
-            <Skeleton className="h-8 w-48 mb-1" />
-            <div className="space-y-1">
-              <Skeleton className="h-[300px]" />
-              <Skeleton className="h-[150px]" />
-            </div>
+          <div className="flex items-center justify-center h-full">
+            <LoadingIndicator />
           </div>
         </div>
       </div>
