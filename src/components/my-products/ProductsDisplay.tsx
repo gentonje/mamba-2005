@@ -4,7 +4,7 @@ import { ModifyProductsPagination } from "@/components/ModifyProductsPagination"
 import { Product } from "@/types/product";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { EmptyProductsList } from "./EmptyProductsList";
-import { LoadingIndicator } from "./LoadingIndicator";
+import { LoadingIndicator } from "@/components/ui/LoadingIndicator";
 
 interface ProductsDisplayProps {
   products: Product[] | undefined;

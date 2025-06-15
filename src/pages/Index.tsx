@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import ProductList from "@/components/ProductList";
@@ -210,7 +209,6 @@ const Index = ({
           isLoading={isLoading}
           isFetchingNextPage={isFetchingNextPage}
           observerRef={loadMoreProducts}
-          selectedCurrency={selectedCurrency}
         />
       </div>
     </div>
