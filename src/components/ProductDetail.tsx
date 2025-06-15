@@ -11,6 +11,7 @@ import { useProductDetail } from "@/hooks/useProductDetail";
 import { ProductTabs } from "./product/detail/ProductTabs";
 import { ProductSimilarSection } from "./product/detail/ProductSimilarSection";
 import { Eye } from "lucide-react";
+import { useInView } from "react-intersection-observer";
 
 interface ProductDetailProps {
   product: Product;
@@ -28,6 +29,10 @@ const ProductDetail = ({
   setSelectedProduct
 }: ProductDetailProps) => {
   const topRef = useRef<HTMLDivElement>(null);
+  const { ref: similarSectionRef, inView: similarSectionInView } = useInView({
+    triggerOnce: true,
+    threshold: 0.1,
+  });
   const { 
     selectedImage,
     setSelectedImage,
@@ -39,7 +44,7 @@ const ProductDetail = ({
     viewCount,
     handleAddToCart,
     addToCartMutation
-  } = useProductDetail(product, selectedCurrency);
+  } = useProductDetail(product, selectedCurrency, similarSectionInView);
 
   useEffect(() => {
     topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -140,7 +145,7 @@ const ProductDetail = ({
       </Card>
 
       {/* Similar products section - using full width */}
-      <div className="w-full">
+      <div ref={similarSectionRef} className="w-full">
         <ProductSimilarSection
           similarProducts={similarProducts}
           getProductImageUrl={getProductImageUrl}

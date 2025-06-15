@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../integrations/supabase/client";
@@ -174,9 +173,7 @@ export const useProductDetail = (product: Product, selectedCurrency: string = "S
           console.error('Error tracking product view:', error);
         } else {
           console.log('Product view tracked successfully');
-          // Update the products table view count
-          await updateProductViewCount(product.id);
-          // Refetch the view count
+          // Refetch the view count to update the UI
           refetchViewCount();
         }
       } catch (error) {
@@ -184,40 +181,10 @@ export const useProductDetail = (product: Product, selectedCurrency: string = "S
       }
     };
 
-    // Update the view count in the products table directly
-    const updateProductViewCount = async (productId: string) => {
-      try {
-        // Get the current count from product_views table
-        const { count, error: countError } = await supabase
-          .from('product_views')
-          .select('*', { count: 'exact', head: false })
-          .eq('product_id', productId);
-          
-        if (countError) {
-          console.error('Error getting view count:', countError);
-          return;
-        }
-
-        // Update the products table with the new count
-        const { error: updateError } = await supabase
-          .from('products')
-          .update({ views: count })
-          .eq('id', productId);
-          
-        if (updateError) {
-          console.error('Error updating product view count:', updateError);
-        } else {
-          console.log(`Updated product ${productId} view count to ${count}`);
-        }
-      } catch (error) {
-        console.error('Error in updateProductViewCount:', error);
-      }
-    };
-
     if (product.id) {
       trackProductView();
     }
-  }, [product.id]);
+  }, [product.id, refetchViewCount]);
 
   return {
     selectedImage,
