@@ -2,7 +2,7 @@
 import { Product } from "@/types/product";
 import { ProductList } from "@/components/ProductList";
 import { ProductFilters } from "@/components/ProductFilters";
-import { CountiesFilter } from "@/components/CountiesFilter";
+import { RegionSelector } from "@/components/RegionSelector";
 import { useSelectedCountry } from "@/Routes";
 import { useState, useEffect } from "react";
 import { SupportedCurrency } from "@/utils/currencyConverter";
@@ -62,9 +62,9 @@ export const ProductListingSection = ({
   return (
     <div className="w-full space-y-1 p-1">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
-        <CountiesFilter
-          selectedCounty={selectedCounty}
-          onCountyChange={handleCountyChange}
+        <RegionSelector
+          selectedRegion={selectedCounty}
+          onRegionChange={handleCountyChange}
           selectedCountry={selectedCountry}
         />
         <ProductFilters onSearchChange={handleSearchChange} />

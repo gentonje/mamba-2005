@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Outlet, useOutletContext } from 'react-router-dom';
 import { Navigation } from '@/components/Navigation';
@@ -93,8 +92,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
       <Navigation 
         searchQuery={searchQuery} 
         onSearchChange={onSearchChange}
-        selectedCountry={effectiveSelectedCountry}
-        onCountryChange={effectiveSetSelectedCountry}
       />
       <div className={cn(
         "w-full pt-16", 

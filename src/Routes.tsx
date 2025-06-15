@@ -1,3 +1,4 @@
+
 import React, { lazy, Suspense, useState, createContext, useContext } from 'react';
 import { Routes as RouterRoutes, Route, Navigate, useOutletContext } from 'react-router-dom';
 import { PrivateRoute } from '@/components/PrivateRoute';
@@ -8,7 +9,10 @@ import { LoadingIndicator } from './components/ui/LoadingIndicator';
 import { MainLayout } from '@/components/layouts/MainLayout';
 
 // Define outlet context type
-type OutletContextType = { selectedCountry: string };
+type OutletContextType = {
+  selectedCountry: string;
+  setSelectedCountry: (country: string) => void;
+};
 
 // Hook to use the country context
 export const useSelectedCountry = () => {

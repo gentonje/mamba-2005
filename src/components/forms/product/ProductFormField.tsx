@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useController, useFormContext } from "react-hook-form";
 import {
@@ -17,8 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CountiesFilter } from "@/components/CountiesFilter";
-import { CountrySelector } from "@/components/navigation/CountrySelector";
+import { RegionSelector } from "@/components/RegionSelector";
+import { CountrySelector } from "@/components/CountrySelector";
 import { ProductCategory } from "@/types/product";
 
 interface ProductFormFieldProps {
@@ -97,10 +96,10 @@ const ProductFormField = ({ form, name, label, type = "text", step, formData, se
       
       case "county":
         return (
-          <CountiesFilter
+          <RegionSelector
             selectedCountry={countryId}
-            selectedCounty={formData.county || ""}
-            onCountyChange={(county) => setFormData({ ...formData, county })}
+            selectedRegion={formData.county || ""}
+            onRegionChange={(county) => setFormData({ ...formData, county })}
             showAllOption={false} // Don't show "All Districts" in the edit form
           />
         );
