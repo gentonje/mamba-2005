@@ -1,4 +1,3 @@
-
 import { Card } from "../ui/card";
 import { Product } from "@/types/product";
 import { SupportedCurrency } from "@/utils/currencyConverter";
@@ -132,7 +131,6 @@ export const ProductSimilar = ({
                 {/* Use the ProductCardContent component without add to cart button */}
                 <ProductCardContent 
                   product={similarProduct}
-                  selectedCurrency={selectedCurrency}
                 />
               </Card>
             </div>

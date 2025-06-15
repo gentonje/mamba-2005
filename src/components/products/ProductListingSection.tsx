@@ -3,7 +3,6 @@ import { Product } from "@/types/product";
 import { ProductList } from "@/components/ProductList";
 import { ProductFilters } from "@/components/ProductFilters";
 import { CountiesFilter } from "@/components/CountiesFilter";
-import { SupportedCurrency } from "@/utils/currencyConverter";
 import { useSelectedCountry } from "@/Routes";
 
 interface ProductListingSectionProps {
@@ -17,7 +16,6 @@ interface ProductListingSectionProps {
   onProductClick: (product: Product) => void;
   isFetchingNextPage: boolean;
   observerRef: (node?: Element | null) => void;
-  selectedCurrency: SupportedCurrency;
   onPriceRangeChange: (min: number, max: number) => void;
   onSortChange: (sort: string) => void;
   getProductImageUrl: (product: Product) => string;
@@ -39,7 +37,6 @@ export const ProductListingSection = ({
   onProductClick,
   isFetchingNextPage,
   observerRef,
-  selectedCurrency,
   onPriceRangeChange,
   onSortChange,
   getProductImageUrl,
@@ -77,7 +74,6 @@ export const ProductListingSection = ({
         onProductClick={onProductClick}
         isFetchingNextPage={isFetchingNextPage}
         observerRef={observerRef}
-        selectedCurrency={selectedCurrency}
         showStatus={showStatus}
         onDelete={onDelete}
         isAdmin={isAdmin}
