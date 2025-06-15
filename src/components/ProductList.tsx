@@ -1,3 +1,4 @@
+
 import React, { useCallback, memo } from "react";
 import { Product } from "@/types/product";
 import ProductCard from "./ProductCard";
@@ -20,17 +21,16 @@ interface ProductListProps {
 }
 
 const ProductSkeleton = memo(() => (
-  <div className="w-full rounded-xl overflow-hidden bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm">
-    <Skeleton className="h-[168px] w-full" /> {/* 4:3 aspect ratio at the default width */}
-    <Skeleton className="h-4 w-2/3 m-1" />
-    <Skeleton className="h-4 w-full m-1" />
-    <div className="flex justify-between m-1 space-x-1">
-      <Skeleton className="h-5 w-20 rounded-md" />
-      <Skeleton className="h-5 w-16 rounded-md" />
+  <div className="w-full rounded-lg overflow-hidden bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 p-2 space-y-2">
+    <Skeleton className="w-full aspect-square" />
+    <Skeleton className="h-4 w-full" />
+    <Skeleton className="h-4 w-2/3" />
+    <div className="flex justify-between items-baseline pt-2">
+      <Skeleton className="h-6 w-1/3" />
+      <Skeleton className="h-4 w-1/4" />
     </div>
   </div>
 ));
-
 ProductSkeleton.displayName = 'ProductSkeleton';
 
 export const ProductList = ({
@@ -60,8 +60,8 @@ export const ProductList = ({
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1 w-full">
-        {[...Array(8)].map((_, index) => (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 px-1">
+        {[...Array(12)].map((_, index) => (
           <div key={index} className="w-full">
             <ProductSkeleton />
           </div>
@@ -82,12 +82,12 @@ export const ProductList = ({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1 w-full">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 px-1">
       {products.map((product, index) => (
         <div
           key={product.id}
           ref={index === products.length - 1 ? setLastElementRef : undefined}
-          className="w-full transform transition-transform hover:-translate-y-1 duration-300"
+          className="w-full"
         >
           <ProductCard
             product={product}
@@ -103,10 +103,7 @@ export const ProductList = ({
       
       {isFetchingNextPage && (
         <>
-          <div className="w-full"><ProductSkeleton /></div>
-          <div className="w-full"><ProductSkeleton /></div>
-          <div className="w-full"><ProductSkeleton /></div>
-          <div className="w-full"><ProductSkeleton /></div>
+          {[...Array(6)].map((_, i) => <div key={`skeleton-${i}`} className="w-full"><ProductSkeleton /></div>)}
         </>
       )}
     </div>
@@ -114,3 +111,4 @@ export const ProductList = ({
 };
 
 export default memo(ProductList);
+

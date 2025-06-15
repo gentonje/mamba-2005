@@ -18,7 +18,6 @@ export const ProductCardContent = memo(({
   const [convertedPrice, setConvertedPrice] = useState<number>(product.price || 0);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Update immediately when currency changes
   useEffect(() => {
     const updatePrice = async () => {
       setIsLoading(true);
@@ -31,6 +30,7 @@ export const ProductCardContent = memo(({
         setConvertedPrice(converted);
       } catch (error) {
         console.error('Error converting price:', error);
+        setConvertedPrice(product.price || 0);
       } finally {
         setIsLoading(false);
       }
@@ -39,41 +39,45 @@ export const ProductCardContent = memo(({
     updatePrice();
   }, [product.price, product.currency, selectedCurrency]);
 
-  // Check if we need to show both prices
-  const showBothPrices = product.currency !== selectedCurrency && product.currency;
+  const showOriginalPrice = product.currency !== selectedCurrency && product.currency && product.price;
 
   return (
-    <CardContent className="p-1">
-      <div className="pt-0">
-        <CardTitle className="text-xs font-medium truncate text-gray-800 dark:text-gray-100 font-serif">
+    <CardContent className="p-2 flex-grow flex flex-col justify-between">
+      <div className="flex-grow">
+        {product.shop_name && (
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 truncate font-sans">{product.shop_name}</p>
+        )}
+        <CardTitle className="text-sm font-semibold leading-snug text-gray-800 dark:text-gray-100 h-[40px] line-clamp-2 font-serif">
           {product.title}
         </CardTitle>
-      </div>
-      
-      <div className="h-[16px] overflow-hidden">
-        <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-1 font-sans">
-          {product.description}
-        </p>
-      </div>
-      
-      <div className="flex justify-between items-center pt-0 space-x-1">
-        <div className="flex items-center space-x-1">
-          {showBothPrices && (
-            <span className="text-xs p-0.5 rounded-full bg-green-100 text-green-800 font-medium whitespace-nowrap inline-block">
-              {product.currency} {Math.round(product.price || 0).toLocaleString()}
-            </span>
+        <div className="flex items-center gap-1 mt-1 flex-wrap">
+          {product.category && (
+              <Badge variant="secondary" className="text-xs font-medium">{product.category}</Badge>
           )}
-          <span className={`text-xs p-0.5 rounded-full bg-orange-500 text-white font-bold whitespace-nowrap inline-block ${
-            isLoading ? 'opacity-50' : ''
-          }`}>
-            {selectedCurrency} {Math.round(convertedPrice).toLocaleString()}
-          </span>
+          {product.county && (
+              <Badge variant="secondary" className="text-xs font-medium">{product.county}</Badge>
+          )}
+        </div>
+      </div>
+      
+      <div className="mt-2">
+        <div className="flex items-baseline gap-2">
+            <span className={`text-lg font-bold text-red-600 dark:text-red-500 ${
+                isLoading ? 'opacity-50' : ''
+            }`}>
+                {selectedCurrency} {Math.round(convertedPrice).toLocaleString()}
+            </span>
+            {showOriginalPrice && (
+                <span className="text-sm text-gray-500 line-through">
+                {product.currency} {Math.round(product.price || 0).toLocaleString()}
+                </span>
+            )}
         </div>
         
         {product.views !== undefined && product.views > 0 && (
-          <Badge variant="secondary" className="text-xs py-0 px-1 h-5">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-sans">
             {Math.round(product.views)} Views
-          </Badge>
+          </p>
         )}
       </div>
     </CardContent>

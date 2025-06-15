@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, memo, useCallback } from "react";
+import React, { memo, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Product } from "@/types/product";
 import { SupportedCurrency } from "@/utils/currencyConverter";
@@ -65,17 +65,18 @@ const ProductCard = ({
   }, [onDelete, product.id]);
 
   return (
-    <Card className="w-full overflow-hidden group relative transition-all duration-300 hover:shadow-xl bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 button-glow-outline">
+    <Card 
+      className="w-full h-full flex flex-col overflow-hidden group relative transition-all duration-300 ease-in-out bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800 hover:shadow-xl hover:-translate-y-1 cursor-pointer"
+      onClick={onClick}
+    >
       <ProductCardImage
         product={product}
         imageUrl={imageUrl}
-        showStatus={showStatus}
         session={session}
         isAdmin={isAdmin}
         isInWishlist={isInWishlist}
         toggleWishlist={toggleWishlist}
         isPending={isPending}
-        onClick={onClick}
       />
       
       <ProductCardContent
