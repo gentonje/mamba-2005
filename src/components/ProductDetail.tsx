@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardFooter } from "./ui/card";
 import { Suspense } from "react";
 import { ProductGallery } from "./product/ProductGallery";
@@ -9,6 +10,7 @@ import { SupportedCurrency } from "@/utils/currencyConverter";
 import { useProductDetail } from "@/hooks/useProductDetail";
 import { ProductTabs } from "./product/detail/ProductTabs";
 import { ProductSimilarSection } from "./product/detail/ProductSimilarSection";
+import { Eye } from "lucide-react";
 
 interface ProductDetailProps {
   product: Product;
@@ -83,13 +85,19 @@ const ProductDetail = ({
                 {displayProduct.title}
               </h1>
               
-              <div className="flex items-center space-x-2 p-1 w-full">
+              <div className="flex items-center flex-wrap gap-2 p-1 w-full">
                 <span className="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full text-xs">
                   {displayProduct.category || 'Other'}
                 </span>
                 <span className={`px-2 py-0.5 ${displayProduct.in_stock ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'} rounded-full text-xs`}>
                   {displayProduct.in_stock ? 'In Stock' : 'Out of Stock'}
                 </span>
+                {typeof displayProduct.views !== 'undefined' && (
+                  <span className="flex items-center px-2 py-0.5 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 rounded-full text-xs">
+                    <Eye className="h-3 w-3 mr-1" />
+                    {displayProduct.views} {displayProduct.views === 1 ? 'view' : 'views'}
+                  </span>
+                )}
               </div>
 
               <div className="w-full">

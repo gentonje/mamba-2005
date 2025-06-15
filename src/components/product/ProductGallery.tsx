@@ -1,7 +1,16 @@
+
 import { getStorageUrl } from "@/utils/storage";
 import { useState, useEffect } from "react";
 import { ImageLoader } from "../ImageLoader";
-import { toast } from "sonner";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  type CarouselApi,
+} from "@/components/ui/carousel";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface ProductGalleryProps {
   images: { storage_path: string; is_main: boolean }[];
@@ -11,51 +20,36 @@ interface ProductGalleryProps {
 }
 
 export const ProductGallery = ({ images, selectedImage, onImageSelect, title }: ProductGalleryProps) => {
-  const [mainImageUrl, setMainImageUrl] = useState<string>("");
-  const [thumbnailUrls, setThumbnailUrls] = useState<{ [key: string]: string }>({});
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [api, setApi] = useState<CarouselApi>();
 
   useEffect(() => {
-    const loadImages = async () => {
-      setIsLoading(true);
-      
-      try {
-        // Load main image
-        if (selectedImage && selectedImage.trim() !== '') {
-          const mainUrl = getStorageUrl(selectedImage);
-          setMainImageUrl(mainUrl);
-        } else {
-          // If no selected image, use placeholder
-          setMainImageUrl("/placeholder.svg");
-        }
+    if (!api) {
+      return;
+    }
 
-        // Load thumbnails
-        const urls: { [key: string]: string } = {};
-        
-        for (const image of images) {
-          if (image.storage_path && image.storage_path.trim() !== '') {
-            const thumbnailUrl = getStorageUrl(image.storage_path);
-            urls[image.storage_path] = thumbnailUrl;
-          }
-        }
-        
-        setThumbnailUrls(urls);
-      } catch (error) {
-        console.error("Error loading product images:", error);
-        toast.error("Had trouble loading some product images");
-      } finally {
-        setIsLoading(false);
+    const selectedIndex = images.findIndex(img => img.storage_path === selectedImage);
+    if (selectedIndex !== -1 && selectedIndex !== api.selectedScrollSnap()) {
+      api.scrollTo(selectedIndex);
+    }
+
+    const onSelect = () => {
+      const currentImage = images[api.selectedScrollSnap()];
+      if (currentImage && currentImage.storage_path !== selectedImage) {
+        onImageSelect(currentImage.storage_path);
       }
     };
 
-    loadImages();
-  }, [selectedImage, images]);
+    api.on("select", onSelect);
 
-  // If no images or images array is empty, show placeholder
+    return () => {
+      api.off("select", onSelect);
+    };
+  }, [api, images, selectedImage, onImageSelect]);
+
   if (!images || images.length === 0) {
     return (
-      <div className="m-0 p-0">
-        <div className="aspect-square md:aspect-[4/3] relative overflow-hidden bg-gray-100 border-0">
+      <div className="p-1 md:p-2">
+        <div className="aspect-square md:aspect-[4/3] relative overflow-hidden bg-gray-100 dark:bg-gray-800 border-0 rounded-lg">
           <ImageLoader
             src="/placeholder.svg"
             alt={title || "Product placeholder"}
@@ -71,39 +65,55 @@ export const ProductGallery = ({ images, selectedImage, onImageSelect, title }: 
   }
 
   return (
-    <div className="p-0 m-0">
-      <div className="aspect-square md:aspect-[4/3] relative overflow-hidden bg-gray-100 border-0">
-        <ImageLoader
-          src={mainImageUrl}
-          alt={title}
-          className="w-full h-full object-contain"
-          width={800}
-          height={600}
-          priority={true}
-          fallbackSrc="/placeholder.svg"
-          glowEffect={true}
-        />
-      </div>
+    <div className="p-1 md:p-2">
+      <Carousel setApi={setApi} className="w-full relative group">
+        <CarouselContent>
+          {images.map((image, index) => (
+            <CarouselItem key={image.storage_path}>
+              <Card className="border-0 rounded-lg overflow-hidden shadow-none bg-transparent">
+                <CardContent className="flex aspect-square items-center justify-center p-0 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                  <ImageLoader
+                    src={getStorageUrl(image.storage_path)}
+                    alt={`${title} image ${index + 1}`}
+                    className="w-full h-full object-contain"
+                    width={800}
+                    height={800}
+                    priority={index === 0}
+                    fallbackSrc="/placeholder.svg"
+                    glowEffect={true}
+                  />
+                </CardContent>
+              </Card>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        {images.length > 1 && (
+          <>
+            <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </>
+        )}
+      </Carousel>
+
       {images.length > 1 && (
-        <div className="flex gap-1 overflow-x-auto pt-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+        <div className="flex gap-2 justify-center overflow-x-auto py-2 mt-2 scrollbar-hide">
           {images.map((image, index) => (
             <div
-              key={index}
-              className={`relative min-w-[60px] h-16 overflow-hidden cursor-pointer transition-all border-0 hover:opacity-90 ${
-                selectedImage === image.storage_path ? 'ring-1 ring-primary' : ''
+              key={image.storage_path}
+              className={`relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 overflow-hidden cursor-pointer transition-all rounded-lg ${
+                selectedImage === image.storage_path
+                  ? 'ring-2 ring-primary ring-offset-2 ring-offset-background'
+                  : 'ring-1 ring-gray-300 dark:ring-gray-700 hover:ring-primary'
               }`}
-              onClick={() => onImageSelect(image.storage_path)}
+              onClick={() => api?.scrollTo(index)}
             >
               <ImageLoader
-                src={thumbnailUrls[image.storage_path] || ''}
-                alt={`${title} ${index + 1}`}
-                className="w-full h-full object-contain"
-                width={60}
-                height={60}
-                priority={false}
+                src={getStorageUrl(image.storage_path)}
+                alt={`${title} thumbnail ${index + 1}`}
+                className="w-full h-full object-cover"
+                width={80}
+                height={80}
                 fallbackSrc="/placeholder.svg"
-                glowEffect={true}
-                glowSelected={selectedImage === image.storage_path}
               />
             </div>
           ))}
