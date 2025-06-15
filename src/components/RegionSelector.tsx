@@ -16,12 +16,14 @@ interface RegionSelectorProps {
   selectedRegion: string;
   onRegionChange: (region: string) => void;
   selectedCountry: string;
+  showAllOption?: boolean;
 }
 
 export const RegionSelector = ({
   selectedRegion,
   onRegionChange,
   selectedCountry = "all", // Default to "all"
+  showAllOption = true,
 }: RegionSelectorProps) => {
   const [districts, setDistricts] = useState<District[]>([]);
   const [loading, setLoading] = useState(true);
@@ -106,12 +108,14 @@ export const RegionSelector = ({
           </SelectValue>
         </SelectTrigger>
         <SelectContent className="z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-          <SelectItem value="all">
-            <div className="flex items-center">
-              <MapPin className="w-4 h-4 mr-2" />
-              <span>All Districts</span>
-            </div>
-          </SelectItem>
+          {showAllOption && (
+            <SelectItem value="all">
+              <div className="flex items-center">
+                <MapPin className="w-4 h-4 mr-2" />
+                <span>All Districts</span>
+              </div>
+            </SelectItem>
+          )}
           {districts.map((district) => (
             <SelectItem key={district.id} value={district.name}>
               {district.name}
