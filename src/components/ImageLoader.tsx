@@ -41,7 +41,6 @@ export const ImageLoader = memo(({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
   const [imageSrc, setImageSrc] = useState(src || fallbackSrc);
-  const { toast } = useToast();
 
   const loadImage = useCallback(async () => {
     if (!src || src === fallbackSrc) {
@@ -66,17 +65,8 @@ export const ImageLoader = memo(({
       setImageSrc(fallbackSrc);
       setError(true);
       setIsLoading(false);
-      
-      // Only show toast for non-placeholder images to avoid spamming
-      if (src && src !== fallbackSrc && !src.includes('placeholder')) {
-        toast({
-          title: "Error loading image",
-          description: "Using placeholder image instead",
-          variant: "destructive",
-        });
-      }
     }
-  }, [src, fallbackSrc, toast]);
+  }, [src, fallbackSrc]);
 
   useEffect(() => {
     // Reset state when src changes

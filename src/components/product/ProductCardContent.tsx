@@ -1,4 +1,3 @@
-
 import { Product } from "@/types/product";
 import { CardContent, CardTitle } from "../ui/card";
 import { SupportedCurrency, convertCurrency } from "@/utils/currencyConverter";
@@ -30,7 +29,6 @@ export const ProductCardContent = memo(({ product }: ProductCardContentProps) =>
         window.removeEventListener('currencyChange', handleCurrencyChange);
     };
   }, []);
-
   useEffect(() => {
     const getConvertedPrice = async () => {
       if (product.price && product.currency) {
@@ -86,12 +84,6 @@ export const ProductCardContent = memo(({ product }: ProductCardContentProps) =>
               }
             </span>
         </div>
-        
-        {product.views !== undefined && product.views > 0 && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-sans">
-            {Math.round(product.views)} Views
-          </p>
-        )}
       </div>
     </CardContent>
   );

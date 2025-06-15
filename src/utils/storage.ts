@@ -7,6 +7,11 @@ export const getStorageUrl = (path: string): string => {
       console.log('Empty path provided to getStorageUrl, returning placeholder');
       return '/placeholder.svg';
     }
+
+    // If it's already a full URL, return it
+    if (path.startsWith('http')) {
+      return path;
+    }
     
     // Enhanced debug logging
     console.log('Getting storage URL for path:', path);
