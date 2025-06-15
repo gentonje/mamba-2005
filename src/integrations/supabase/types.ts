@@ -9,6 +9,79 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      activities: {
+        Row: {
+          activity_number: string | null
+          activity_text: string
+          category: string | null
+          created_at: string
+          id: string
+          organization_id: string
+        }
+        Insert: {
+          activity_number?: string | null
+          activity_text: string
+          category?: string | null
+          created_at?: string
+          id?: string
+          organization_id: string
+        }
+        Update: {
+          activity_number?: string | null
+          activity_text?: string
+          category?: string | null
+          created_at?: string
+          id?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activities_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_info"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      board_members: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          is_active: boolean | null
+          organization_id: string
+          position_order: number | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id?: string
+          is_active?: boolean | null
+          organization_id: string
+          position_order?: number | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean | null
+          organization_id?: string
+          position_order?: number | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_info"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cart_items: {
         Row: {
           created_at: string
@@ -58,6 +131,82 @@ export type Database = {
           name?: Database["public"]["Enums"]["product_category"]
         }
         Relationships: []
+      }
+      contact_info: {
+        Row: {
+          address: string | null
+          contact_person: string | null
+          created_at: string
+          email_primary: string | null
+          email_secondary: string | null
+          id: string
+          organization_id: string
+          phone_number: string | null
+        }
+        Insert: {
+          address?: string | null
+          contact_person?: string | null
+          created_at?: string
+          email_primary?: string | null
+          email_secondary?: string | null
+          id?: string
+          organization_id: string
+          phone_number?: string | null
+        }
+        Update: {
+          address?: string | null
+          contact_person?: string | null
+          created_at?: string
+          email_primary?: string | null
+          email_secondary?: string | null
+          id?: string
+          organization_id?: string
+          phone_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_info_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_info"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      core_values: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number | null
+          id: string
+          organization_id: string
+          value_name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          organization_id: string
+          value_name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          organization_id?: string
+          value_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "core_values_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_info"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       counties: {
         Row: {
@@ -226,6 +375,38 @@ export type Database = {
           },
         ]
       }
+      objectives: {
+        Row: {
+          created_at: string
+          id: string
+          objective_number: number | null
+          objective_text: string
+          organization_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          objective_number?: number | null
+          objective_text: string
+          organization_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          objective_number?: number | null
+          objective_text?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "objectives_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_info"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       onboarding_progress: {
         Row: {
           completed_at: string | null
@@ -246,6 +427,38 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      operational_areas: {
+        Row: {
+          area_name: string
+          created_at: string
+          description: string | null
+          id: string
+          organization_id: string
+        }
+        Insert: {
+          area_name: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          organization_id: string
+        }
+        Update: {
+          area_name?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operational_areas_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_info"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       orders: {
         Row: {
@@ -296,6 +509,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      organization_info: {
+        Row: {
+          acronym: string | null
+          background_info: string | null
+          created_at: string
+          formation_date: string | null
+          id: string
+          logo_url: string | null
+          mission: string | null
+          name: string
+          registration_info: string | null
+          updated_at: string
+          vision: string | null
+        }
+        Insert: {
+          acronym?: string | null
+          background_info?: string | null
+          created_at?: string
+          formation_date?: string | null
+          id?: string
+          logo_url?: string | null
+          mission?: string | null
+          name: string
+          registration_info?: string | null
+          updated_at?: string
+          vision?: string | null
+        }
+        Update: {
+          acronym?: string | null
+          background_info?: string | null
+          created_at?: string
+          formation_date?: string | null
+          id?: string
+          logo_url?: string | null
+          mission?: string | null
+          name?: string
+          registration_info?: string | null
+          updated_at?: string
+          vision?: string | null
+        }
+        Relationships: []
       }
       product_images: {
         Row: {
@@ -736,9 +991,83 @@ export type Database = {
         Args: { user_id_input: string }
         Returns: number
       }
+      get_enhanced_product_data: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          title: string
+          description: string
+          price: number
+          currency: string
+          category: string
+          county: string
+          country: string
+          shop_name: string
+          in_stock: boolean
+          available_quantity: number
+          views: number
+          average_rating: number
+          seller_name: string
+          created_at: string
+          storage_path: string
+          country_id: number
+        }[]
+      }
       get_or_create_default_shop: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_product_comprehensive_details: {
+        Args: { product_id_param: string }
+        Returns: {
+          id: string
+          title: string
+          description: string
+          price: number
+          currency: string
+          category: string
+          county: string
+          country: string
+          shop_name: string
+          in_stock: boolean
+          available_quantity: number
+          views: number
+          average_rating: number
+          seller_name: string
+          seller_contact: string
+          seller_phone: string
+          created_at: string
+          storage_path: string
+          shipping_info: string
+          product_images: Json
+          reviews_summary: Json
+          country_id: number
+        }[]
+      }
+      get_similar_products: {
+        Args: { product_id_param: string; limit_count?: number }
+        Returns: {
+          id: string
+          title: string
+          price: number
+          currency: string
+          category: string
+          country: string
+          in_stock: boolean
+          average_rating: number
+          storage_path: string
+          main_image_path: string
+        }[]
+      }
+      get_user_wishlist_products: {
+        Args: { user_id_param: string }
+        Returns: {
+          product_id: string
+          title: string
+          price: number
+          currency: string
+          category: string
+        }[]
       }
       insert_test_products: {
         Args: { user_email: string }
@@ -755,6 +1084,39 @@ export type Database = {
       manage_admin_user: {
         Args: { target_user_id: string; should_be_admin: boolean }
         Returns: undefined
+      }
+      search_products_with_context: {
+        Args: {
+          query_text?: string
+          category_filter?: string
+          country_filter?: string
+          min_price?: number
+          max_price?: number
+          currency_filter?: string
+          in_stock_only?: boolean
+          limit_count?: number
+        }
+        Returns: {
+          id: string
+          title: string
+          description: string
+          price: number
+          currency: string
+          category: string
+          county: string
+          country: string
+          shop_name: string
+          in_stock: boolean
+          available_quantity: number
+          views: number
+          average_rating: number
+          seller_name: string
+          created_at: string
+          storage_path: string
+          main_image_path: string
+          seller_contact: string
+          country_id: number
+        }[]
       }
       update_product_images: {
         Args: Record<PropertyKey, never>
