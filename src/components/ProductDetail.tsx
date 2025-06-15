@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardFooter } from "./ui/card";
-import { Suspense } from "react";
+import { Suspense, useRef, useEffect } from "react";
 import { ProductGallery } from "./product/ProductGallery";
 import { ProductInfo } from "./product/ProductInfo";
 import { ProductActions } from "./product/ProductActions";
@@ -27,6 +27,7 @@ const ProductDetail = ({
   selectedCurrency = "USD",
   setSelectedProduct
 }: ProductDetailProps) => {
+  const topRef = useRef<HTMLDivElement>(null);
   const { 
     selectedImage,
     setSelectedImage,
@@ -40,6 +41,10 @@ const ProductDetail = ({
     addToCartMutation
   } = useProductDetail(product, selectedCurrency);
 
+  useEffect(() => {
+    topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [product.id]);
+
   // Update product with latest view count if available
   const displayProduct = {
     ...product,
@@ -48,8 +53,6 @@ const ProductDetail = ({
 
   // Handle similar product selection
   const handleSimilarProductClick = (similarProduct: Product) => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    
     // If setSelectedProduct prop exists, use it to update the selected product
     if (setSelectedProduct) {
       setSelectedProduct(similarProduct);
@@ -63,7 +66,7 @@ const ProductDetail = ({
   };
 
   return (
-    <div className="w-full mx-0 px-0">
+    <div ref={topRef} className="w-full mx-0 px-0">
       <Card className="w-full overflow-hidden shadow-md border-0 rounded-none">
         <CardContent className="p-0">
           <div className="flex flex-col md:flex-row">
