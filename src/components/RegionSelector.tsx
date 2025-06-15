@@ -26,13 +26,18 @@ export const RegionSelector = ({
   showAllOption = true,
 }: RegionSelectorProps) => {
   const [districts, setDistricts] = useState<District[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const previousCountry = useRef(selectedCountry);
+  const isInitialized = useRef(false);
   
   useEffect(() => {
     const fetchDistricts = async () => {
       try {
-        setLoading(true);
+        // Only show loading for specific countries, not for "all"
+        if (selectedCountry && selectedCountry !== "all") {
+          setLoading(true);
+        }
+        
         console.log("Fetching districts for country ID:", selectedCountry);
         
         // Only fetch districts if a specific country is selected
@@ -46,6 +51,7 @@ export const RegionSelector = ({
           if (error) {
             console.error("Error fetching districts:", error);
             toast.error("Failed to load districts");
+            setDistricts([]);
             return;
           }
 
@@ -57,6 +63,7 @@ export const RegionSelector = ({
       } catch (error) {
         console.error("Failed to fetch districts:", error);
         toast.error("Failed to load districts");
+        setDistricts([]);
       } finally {
         setLoading(false);
       }
@@ -64,11 +71,13 @@ export const RegionSelector = ({
 
     fetchDistricts();
     
-    // Only reset region selection when country changes
-    if (previousCountry.current !== selectedCountry) {
+    // Only reset region selection when country actually changes and after initial load
+    if (isInitialized.current && previousCountry.current !== selectedCountry) {
       onRegionChange("all");
-      previousCountry.current = selectedCountry;
     }
+    
+    previousCountry.current = selectedCountry;
+    isInitialized.current = true;
   }, [selectedCountry, onRegionChange]);
 
   const renderTriggerContent = () => {
@@ -89,19 +98,24 @@ export const RegionSelector = ({
     onRegionChange(value);
   };
 
+  const isDisabled = !selectedCountry || selectedCountry === "all";
+  const placeholderText = selectedCountry === "all" 
+    ? "Select country first" 
+    : loading 
+      ? "Loading districts..." 
+      : "Select district";
+
   return (
     <div className="w-full max-w-xs">
       <Select
         value={selectedRegion}
         onValueChange={handleRegionChange}
-        disabled={loading || !selectedCountry || selectedCountry === "all"}
+        disabled={isDisabled}
       >
         <SelectTrigger className="w-full h-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
           <SelectValue>
-            {selectedCountry === "all" ? (
-              "Select country first"
-            ) : loading ? (
-              "Loading districts..."
+            {isDisabled ? (
+              placeholderText
             ) : (
               renderTriggerContent()
             )}
