@@ -102,7 +102,7 @@ export const ImageLoader = memo(({
     <>
       {isLoading && (
         <div 
-          className={`${imageClasses} animate-pulse bg-gray-200 dark:bg-gray-800`}
+          className={`${imageClasses} bg-gray-200 dark:bg-gray-800`}
           style={{ width, height }}
         />
       )}

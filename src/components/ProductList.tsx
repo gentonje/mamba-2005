@@ -1,8 +1,9 @@
+
 import React, { useCallback, memo } from "react";
 import { Product } from "@/types/product";
 import ProductCard from "./ProductCard";
 import { useInView } from "react-intersection-observer";
-import { LoadingIndicator } from "@/components/ui/LoadingIndicator";
+import { ProductCardSkeleton } from "./product/ProductCardSkeleton";
 import { Loader2 } from "lucide-react";
 
 interface ProductListProps {
@@ -44,8 +45,10 @@ export const ProductList = ({
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <LoadingIndicator />
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 px-1">
+        {Array.from({ length: 12 }).map((_, index) => (
+          <ProductCardSkeleton key={index} />
+        ))}
       </div>
     );
   }

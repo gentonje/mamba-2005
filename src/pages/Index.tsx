@@ -12,7 +12,7 @@ import { BreadcrumbNav } from "@/components/BreadcrumbNav";
 import { useCurrencyFix } from "@/hooks/useCurrencyFix";
 import { useProducts } from "@/hooks/useProducts";
 import { supabase } from "@/integrations/supabase/client";
-import { CountrySelector } from "@/components/navigation/CountrySelector";
+import { ProductDetailSkeleton } from "@/components/product/detail/ProductDetailSkeleton";
 
 interface IndexProps {
   selectedCountry?: string;
@@ -26,6 +26,7 @@ const Index = ({
   
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isProductLoading, setIsProductLoading] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortOrder, setSortOrder] = useState("newest");
@@ -85,8 +86,9 @@ const Index = ({
     // Check if we have a selectedProductId in the location state
     const locationState = location.state as { selectedProductId?: string } | null;
     
-    if (locationState?.selectedProductId) {
+    if (locationState?.selectedProductId && locationState.selectedProductId !== selectedProduct?.id) {
       const loadProductDetails = async () => {
+        setIsProductLoading(true);
         try {
           const { data, error } = await supabase
             .from('products')
@@ -101,6 +103,8 @@ const Index = ({
           }
         } catch (err) {
           console.error('Error fetching product details:', err);
+        } finally {
+          setIsProductLoading(false);
         }
       };
       
@@ -109,7 +113,7 @@ const Index = ({
       // Clear the location state to prevent reloading on future navigations
       window.history.replaceState({}, document.title);
     }
-  }, [location.state]);
+  }, [location.state, selectedProduct?.id]);
 
   const loadMoreProducts = useCallback((node?: Element | null) => {
     if (node && hasNextPage && !isFetchingNextPage) {
@@ -151,6 +155,10 @@ const Index = ({
       .from("images")
       .getPublicUrl(product.product_images[0].storage_path).data.publicUrl;
   };
+
+  if (isProductLoading) {
+    return <ProductDetailSkeleton />;
+  }
 
   if (selectedProduct) {
     return (
